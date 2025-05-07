@@ -57,9 +57,9 @@ public class check {
     // 解く
     SimplexSolver solver = new SimplexSolver();
     PointValuePair solution = solver.optimize(
-            objective,                                    //目的関数
-            new LinearConstraintSet(constraints),         //制約条件
-            GoalType.MINIMIZE                            //最小化する
+      objective,                                    //目的関数
+      new LinearConstraintSet(constraints),         //制約条件
+      GoalType.MINIMIZE                            //最小化する
     );
 
     double[] result = solution.getPoint();
@@ -126,5 +126,5 @@ public class check {
     sb.append(rel).append(rhs);
 
     return sb.toString();
-}
+  }
 }

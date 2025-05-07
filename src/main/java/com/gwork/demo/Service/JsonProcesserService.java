@@ -27,8 +27,16 @@ public class JsonProcesserService {
         final String statsDataId = "0003421913";   //統計表ID
         final String cdTimeFrom = "2024001212";         //2024年12月からの
         final String cdArea = "23100";        //名古屋における
+
+        /*
         final String cdCat02From = "01401";      //キャベツから
         final String cdCat02To = "01443";      //しめじまで
+        */
+
+        
+        final String cdCat02From = "01001";      //うるち米(コシヒカリ)から
+        final String cdCat02To = "01584";      //パイナップルまで
+        
         final String LIMIT = "1000";     //取得件数上限
         JsonNode jsonResult = null; // 初期化
         try {
@@ -83,13 +91,22 @@ public class JsonProcesserService {
             int interval = jsonNode.get("GET_STATS_DATA").get("STATISTICAL_DATA").get("CLASS_INF").get("CLASS_OBJ").get(4).get("CLASS").size(); //調査日時の個数
             JsonNode prices = jsonNode.get("GET_STATS_DATA").get("STATISTICAL_DATA").get("DATA_INF").get("VALUE"); //食材の価格が配列で保管されている部分
             for(int i=0; i*interval<prices.size(); i++){
-                String id = mapper.convertValue(prices.get(i*interval).get("@cat02"), String.class);
-                String pri = mapper.convertValue(prices.get(i*interval).get("$"), String.class);
-                //価格が数字表記であるときのみ追加(100gあたりの価格に変換して)    そうでなければ適当な値を
+                int index = i*interval;
+                String id = mapper.convertValue(prices.get(index).get("@cat02"), String.class);
+                String pri = mapper.convertValue(prices.get(index).get("$"), String.class);
+                //価格が数字表記であるときのみ追加
                 if(pri.matches("\\d+")){
-                    idAndPri.put(id, Integer.parseInt(pri) / 10);
+                    idAndPri.put(id, Integer.parseInt(pri));
                 }else{
-                    idAndPri.put(id, 999999);
+                    //数字表記の価格があるまで、interval分さかのぼる
+                    for(int j=1; j<interval; j++){
+                        pri = mapper.convertValue(prices.get(index + j).get("$"), String.class);
+                        if(pri.matches("\\d+")){
+                            idAndPri.put(id, Integer.parseInt(pri));
+                            break;
+                        }
+                        idAndPri.put(id, 999999);
+                    }
                 }
             }
             for(String key : idAndPri.keySet()){
@@ -116,6 +133,12 @@ public class JsonProcesserService {
         return prices;
     }
 
+    //{食材：価格}のmapを返す
+    public Map<String, Integer> getIngAndPri(){
+        readJSONFromCache();
+        return this.ingAndPri;
+    }
+
     
     //メタデータの確認
     public String getMetaData() {
@@ -134,9 +157,16 @@ public class JsonProcesserService {
     }
 
 
-    //<確認用>
-    public void check(){
-        readJSONFromCache();
-        System.out.println(this.ingAndPri);
+    //JSONの元データを確認
+    public JsonNode checkJSON(){
+        final String FILE_PATH = "C:\\Users\\81809\\Desktop\\demo\\CachedData.json";
+        try {
+            ObjectMapper mapper = new ObjectMapper();
+            JsonNode jsonNode = mapper.readTree(new File(FILE_PATH));   //ファイルからJsonNodeを読み込む(元データ)
+            return jsonNode;
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null;
+        }
     }
 }

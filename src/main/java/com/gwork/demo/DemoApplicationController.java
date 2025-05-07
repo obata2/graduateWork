@@ -9,6 +9,7 @@ import com.gwork.demo.Service.LinearService;
 import com.fasterxml.jackson.databind.JsonNode;
 
 import java.util.ArrayList;
+import java.util.Map;
 
 @RestController
 public class DemoApplicationController {
@@ -40,6 +41,14 @@ public class DemoApplicationController {
     public String getMetaData() {
         return jsonProcesser.getMetaData();
     }
+    @GetMapping("/ingAndPri")
+    public Map<String, Integer> getIngAndPri() {
+        return jsonProcesser.getIngAndPri();
+    }
+    @GetMapping("/checkJSON")
+    public JsonNode checkJSON() {
+        return jsonProcesser.checkJSON();
+    }
 
 
     private final NutrientService nutrientService = new NutrientService();
@@ -61,10 +70,5 @@ public class DemoApplicationController {
     @GetMapping("/linear")
     public void getLinearResult(){
         linearService.SolveLinearProblem();
-    }
-
-    @GetMapping("/check")
-    public void check(){
-        jsonProcesser.check();
     }
 }
