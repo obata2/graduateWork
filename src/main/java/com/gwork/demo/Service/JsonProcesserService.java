@@ -88,29 +88,25 @@ public class JsonProcesserService {
                 }
             }
             //価格を取得してvalueにセット
-            int interval = jsonNode.get("GET_STATS_DATA").get("STATISTICAL_DATA").get("CLASS_INF").get("CLASS_OBJ").get(4).get("CLASS").size(); //調査日時の個数
             JsonNode prices = jsonNode.get("GET_STATS_DATA").get("STATISTICAL_DATA").get("DATA_INF").get("VALUE"); //食材の価格が配列で保管されている部分
-            for(int i=0; i*interval<prices.size(); i++){
-                int index = i*interval;
-                String id = mapper.convertValue(prices.get(index).get("@cat02"), String.class);
-                String pri = mapper.convertValue(prices.get(index).get("$"), String.class);
-                //価格が数字表記であるときのみ追加
-                if(pri.matches("\\d+")){
+            for(int i=0; i<prices.size(); i++){
+                //価格が数字表記であり、かつ日時が最新のものだけを追加していく
+                String id = mapper.convertValue(prices.get(i).get("@cat02"), String.class);
+                String pri = mapper.convertValue(prices.get(i).get("$"), String.class);
+                if(pri.matches("\\d+") && idAndPri.get(id) == null){
                     idAndPri.put(id, Integer.parseInt(pri));
-                }else{
-                    //数字表記の価格があるまで、interval分さかのぼる
-                    for(int j=1; j<interval; j++){
-                        pri = mapper.convertValue(prices.get(index + j).get("$"), String.class);
-                        if(pri.matches("\\d+")){
-                            idAndPri.put(id, Integer.parseInt(pri));
-                            break;
-                        }
-                        idAndPri.put(id, 999999);
-                    }
                 }
             }
-            for(String key : idAndPri.keySet()){
-                ingAndPri.put(idAndIng.get(key), idAndPri.get(key));
+            //価格がnullのままではダメなので、適当な値を
+            for(String id : idAndPri.keySet()){
+                String ing = idAndIng.get(id);
+                Integer pri = idAndPri.get(id);
+                if(pri != null){
+                    ingAndPri.put(ing, pri);
+                }else{
+                    idAndPri.put(id, 99999);
+                    ingAndPri.put(ing, 99999);
+                }
             }
         } catch (IOException e) {
             e.printStackTrace();
