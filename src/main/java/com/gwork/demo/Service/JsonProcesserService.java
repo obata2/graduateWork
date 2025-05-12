@@ -28,14 +28,17 @@ public class JsonProcesserService {
         final String cdTimeFrom = "2024001212";         //2024年12月からの
         final String cdArea = "23100";        //名古屋における
 
+
         /*
         final String cdCat02From = "01401";      //キャベツから
         final String cdCat02To = "01443";      //しめじまで
         */
 
         
+        
         final String cdCat02From = "01001";      //うるち米(コシヒカリ)から
         final String cdCat02To = "01584";      //パイナップルまで
+        
         
         final String LIMIT = "1000";     //取得件数上限
         JsonNode jsonResult = null; // 初期化
@@ -79,7 +82,7 @@ public class JsonProcesserService {
             //食材名を取得してkeyにセット
             JsonNode ingredients = jsonNode.get("GET_STATS_DATA").get("STATISTICAL_DATA").get("CLASS_INF").get("CLASS_OBJ").get(2).get("CLASS");    //食材名が配列で保管されている部分
             for(int i=0; i<ingredients.size(); i++){
-                String ing = mapper.convertValue(ingredients.get(i).get("@name"), String.class);
+                String ing = mapper.convertValue(ingredients.get(i).get("@name"), String.class).substring(5);
                 String id = mapper.convertValue(ingredients.get(i).get("@code"), String.class);
                 if(!ing.contains("調査終了")){
                     ingAndPri.put(ing, null);
@@ -94,7 +97,7 @@ public class JsonProcesserService {
                 String id = mapper.convertValue(prices.get(i).get("@cat02"), String.class);
                 String pri = mapper.convertValue(prices.get(i).get("$"), String.class);
                 if(pri.matches("\\d+") && idAndPri.get(id) == null){
-                    idAndPri.put(id, Integer.parseInt(pri));
+                    idAndPri.put(id, Integer.parseInt(pri) / 10);
                 }
             }
             //価格がnullのままではダメなので、適当な値を

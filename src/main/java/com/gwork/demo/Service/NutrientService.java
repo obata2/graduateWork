@@ -15,7 +15,7 @@ public class NutrientService {
     private ArrayList<ArrayList<Double>> nutrientsList = new ArrayList<>();
     private ArrayList<Double> targetsList = new ArrayList<>();
 
-    //コンストラクタで3つの配列を用意する
+    //コンストラクタで、上の3つの配列を用意する
     public NutrientService(){
         String filePath = "C:\\Users\\81809\\Desktop\\demo\\食品標準成分表示_生野菜.xlsx";
         try (FileInputStream fis = new FileInputStream(new File(filePath));
@@ -23,7 +23,7 @@ public class NutrientService {
             Sheet sheet = workbook.getSheetAt(0); //最初のシートを取得
             int lastRowNum = sheet.getLastRowNum(); // データが入力されている最後の行番号を取得
             //10行目取得    (excelの10行目(1-indexed)←→コードで9行を指定(0-indexed))
-            for(int rowIndex=9; rowIndex<lastRowNum - 2 ; rowIndex++){
+            for(int rowIndex=9; rowIndex<lastRowNum - 1; rowIndex++){
                 Row row = sheet.getRow(rowIndex);
                 nutrientsList.add(new ArrayList<>());
                 for (int colIndex = 0; colIndex < row.getLastCellNum(); colIndex++) {

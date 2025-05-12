@@ -9,18 +9,23 @@ import com.gwork.demo.Service.NutrientService;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Map;
 
-import org.apache.commons.math3.optim.MaxIter;
 import org.apache.commons.math3.optim.PointValuePair;
 
 public class check {
   public static void main(String args[]){
     
     JsonProcesserService jsonProcesserService = new JsonProcesserService();
-    double[] prices = jsonProcesserService.getPri();
     NutrientService nutrientService = new NutrientService();
     double[] targets = nutrientService.getTargets();
-    double[][] nutrients = transpose(nutrientService.getNutrients());    //ここの渡し方が間違っている、横ではなく縦にする必要があるので、転置する
+    double[][] nutrients = transpose(nutrientService.getNutrients());
+    ArrayList<String> ingredients = nutrientService.getIngredients();
+    Map<String, Integer> ingAndPri = jsonProcesserService.getIngAndPri();
+    double[] prices = new double[ingredients.size()];
+    for(int i=0; i<ingredients.size(); i++){
+      prices[i] = ingAndPri.get(ingredients.get(i));
+    }
     
 
     /*
