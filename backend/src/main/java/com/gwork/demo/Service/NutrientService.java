@@ -17,7 +17,7 @@ public class NutrientService {
 
     //コンストラクタで、上の3つの配列を用意する
     public NutrientService(){
-        String filePath = "C:\\Users\\81809\\Desktop\\demo\\食品標準成分表示_生野菜.xlsx";
+        String filePath = "C:\\Users\\81809\\Desktop\\demo\\backend\\食品標準成分表示_生野菜.xlsx";
         try (FileInputStream fis = new FileInputStream(new File(filePath));
              Workbook workbook = new XSSFWorkbook(fis)) {
             Sheet sheet = workbook.getSheetAt(0); //最初のシートを取得
