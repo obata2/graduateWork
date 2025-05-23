@@ -12,14 +12,6 @@ import com.gwork.demo.Service.NutrientService;
 @RequestMapping("/nutrient")
 public class nutrientController {
       private final NutrientService nutrientService = new NutrientService();
-    @GetMapping("/ingredients")
-    public ArrayList<String> getIngredients(){
-        return nutrientService.getIngredients();
-    }
-    @GetMapping("/nutrientsIndex")
-    public double[][] getNutrients(){
-        return nutrientService.getNutrients();
-    }
     @GetMapping("/targets")
     public double[] getTargets(){
         return nutrientService.getTargets();

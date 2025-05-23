@@ -15,34 +15,68 @@ import org.apache.commons.math3.optim.PointValuePair;
 
 public class check {
   public static void main(String args[]){
-    
+
     JsonProcesserService jsonProcesserService = new JsonProcesserService();
     NutrientService nutrientService = new NutrientService();
-    double[] targets = nutrientService.getTargets();
-    double[][] nutrients = transpose(nutrientService.getNutrients());
-    ArrayList<String> ingredients = nutrientService.getIngredients();
-    Map<String, Integer> ingAndPri = jsonProcesserService.getIngAndPri();
-    double[] prices = new double[ingredients.size()];
-    for(int i=0; i<ingredients.size(); i++){
-      prices[i] = ingAndPri.get(ingredients.get(i));
+
+    double[][] stapleAndProtein = nutrientService.getStapleAndProtein(); //主食・肉の栄養テーブル
+    double[][] vegetable = nutrientService.getVegetable(); //野菜類の栄養テーブル
+    double[] prices = setPrices(nutrientService.getUnitPrice(), jsonProcesserService.getIngAndPri()); //100gあたりの野菜類の価格情報
+
+    long startTime = System.currentTimeMillis(); // 開始時刻を記録
+    long timeout = 3000; // 3秒 = 3000ミリ秒
+
+    //主食：こめ~中華麺
+    for(int i=0; i<4; i++){
+      //たんぱく源：牛・豚・鶏の各部位
+      for(int j=4; j<stapleAndProtein.length; j++){
+        //線形計画法を行うメソッドに順次渡していくように    ただし、prices,nutrientsは固定し、targetだけ補正して返す→目的関数は固定
+        //栄養素に対する、主食・肉類を所与とした補正
+        double[] targets = nutrientService.getTargets();  //目標値
+        for(int k=0; k<targets.length; k++){
+          targets[k] = Math.max(0, (targets[k] - stapleAndProtein[i][k] - stapleAndProtein[j][k]));
+        }
+        double[] result = solveLinear(prices, targets, transpose(vegetable));
+        for(int l=0; l<result.length; l++){
+          result[l] = Math.round(result[l] * 1000.0) / 1000.0;
+        }
+        System.out.println(Arrays.toString(result));
+      }
+      long elapsed = System.currentTimeMillis() - startTime;
+      if (elapsed > timeout) {
+          System.out.println("3秒経過したので処理を中断します");
+          break;
+      }
     }
+    System.out.println((System.currentTimeMillis() - startTime) + "ミリ秒で計算終了");
+  }
     
 
-    /*
-    //確認用データ  (2x+3y の最大化、制約条件は 4x+2y>=1 && 3x+5y>=2 && 非負)
-    double[] prices = {2.0, 3.0};
-    double[] targets = {1.0, 2.0};
-    double[][] nutrients = transpose(new double[][]{{4.0, 3.0}, {2.0, 5.0}});
-    */
-     
+  //価格をarrayとして持つ
+  public static double[] setPrices(Map<String, Double> unitPrice, Map<String, Integer> ingAndPri){
+    for(String key : unitPrice.keySet()){
+      if(ingAndPri.containsKey(key)){
+        unitPrice.put(key, ingAndPri.get(key) / unitPrice.get(key) * 100);
+      }
+    }
+    double[] prices = new double[unitPrice.size()];
+    int i=0;
+    for(double value : unitPrice.values()){
+      prices[i] = value;
+      i++;
+    }
+    return prices;
+  }
 
+  
+  //線形計画法で解く
+  public static double[] solveLinear(double[] prices, double[] targets, double[][] vegetable){
     // 最小化する目的関数   Σ(価格*数量)
     LinearObjectiveFunction objective = new LinearObjectiveFunction(prices, 0);
-
     //制約条件  Σ(栄養*数量)>=目標値  ：栄養素ごとに制約を追加
     Collection<LinearConstraint> constraints = new ArrayList<>();
     for (int i = 0; i < targets.length; i++) {
-        constraints.add(new LinearConstraint(nutrients[i], Relationship.GEQ, targets[i]));
+        constraints.add(new LinearConstraint(vegetable[i], Relationship.GEQ, targets[i]));
     }
     //非負制約は明示的に加える
     for (int i = 0; i < prices.length; i++) {
@@ -50,15 +84,6 @@ public class check {
         coeff[i] = 1;
         constraints.add(new LinearConstraint(coeff, Relationship.GEQ, 0));
     }
-
-    /*
-    //制約条件の表示
-    for (LinearConstraint lc : constraints) {
-      System.out.println(formatConstraint(lc));
-    }
-      */
-
-    
     // 解く
     SimplexSolver solver = new SimplexSolver();
     PointValuePair solution = solver.optimize(
@@ -66,24 +91,10 @@ public class check {
       new LinearConstraintSet(constraints),         //制約条件
       GoalType.MINIMIZE                            //最小化する
     );
-
     double[] result = solution.getPoint();
-    System.out.println("合計価格: " + solution.getValue());
-    System.out.println("選ばれた量: " + Arrays.toString(result));
-
-    double[] realized = new double[targets.length];
-    for(int i=0; i<result.length; i++){
-      for(int j=0; j<nutrients.length; j++){
-        realized[j] += result[i] * nutrients[j][i];
-      }
-    }
-    System.out.println(realized.length + " " + targets.length);
-    System.out.println("目標 : 実現値");
-    for(int i=0; i<realized.length; i++){
-      System.out.println(targets[i] + " : " + realized[i]);
-    }
+    return result;
   }
-
+  
 
   //二次元配列を転置する
   public static double[][] transpose(double[][] nutrients){
@@ -105,31 +116,24 @@ public class check {
     double[] coefficients = lc.getCoefficients().toArray();
     Relationship relationship = lc.getRelationship();
     double rhs = lc.getValue();
-
     StringBuilder sb = new StringBuilder();
-
     for (int i = 0; i < coefficients.length; i++) {
         double coef = coefficients[i];
         if (coef == 0) continue;
-
         if (sb.length() > 0) {
             sb.append(coef >= 0 ? " + " : " - ");
         } else if (coef < 0) {
             sb.append("-");
         }
-
         sb.append(String.format("%.2f", Math.abs(coef))).append("*x").append(i + 1);
     }
-
     // 関係記号
     String rel = switch (relationship) {
         case LEQ -> " <= ";
         case GEQ -> " >= ";
         case EQ  -> " = ";
     };
-
     sb.append(rel).append(rhs);
-
     return sb.toString();
   }
 }

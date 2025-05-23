@@ -27,18 +27,12 @@ public class JsonProcesserService {
         final String statsDataId = "0003421913";   //統計表ID
         final String cdTimeFrom = "2024001212";         //2024年12月からの
         final String cdArea = "23100";        //名古屋における
-
-
         /*
         final String cdCat02From = "01401";      //キャベツから
         final String cdCat02To = "01443";      //しめじまで
         */
-
-        
-        
         final String cdCat02From = "01001";      //うるち米(コシヒカリ)から
         final String cdCat02To = "01584";      //パイナップルまで
-        
         
         final String LIMIT = "1000";     //取得件数上限
         JsonNode jsonResult = null; // 初期化
@@ -97,7 +91,7 @@ public class JsonProcesserService {
                 String id = mapper.convertValue(prices.get(i).get("@cat02"), String.class);
                 String pri = mapper.convertValue(prices.get(i).get("$"), String.class);
                 if(pri.matches("\\d+") && idAndPri.get(id) == null){
-                    idAndPri.put(id, Integer.parseInt(pri) / 10);
+                    idAndPri.put(id, Integer.parseInt(pri));
                 }
             }
             //価格がnullのままではダメなので、適当な値を
@@ -135,6 +129,7 @@ public class JsonProcesserService {
     //{食材：価格}のmapを返す
     public Map<String, Integer> getIngAndPri(){
         readJSONFromCache();
+        //System.out.println(this.ingAndPri);
         return this.ingAndPri;
     }
 
