@@ -22,16 +22,15 @@ public class NutrientService {
     public double[][] getStapleAndProtein(){
         try (FileInputStream fis = new FileInputStream(new File(filePath_stapleAndProtein));
             Workbook workbook = new XSSFWorkbook(fis)) {
-            Sheet sheet = workbook.getSheetAt(0); //最初のシートを取得
+            Sheet sheet = workbook.getSheetAt(1); //シート2を取得
             int rowSize = sheet.getLastRowNum();    //0-indexedの、データが最後に存在する行番号
-            int colSize = sheet.getRow(3).getLastCellNum() - 1; //1-indexedの、〃列番号なので、0-indexedに合わせる
-            double[][] stapleAndProteinNutrients = new double[rowSize - 5][colSize - 3];
-            for(int rowIndex = 3; rowIndex <= rowSize - 3; rowIndex++){
+            int colSize = sheet.getRow(3).getLastCellNum() - 1; //0-indexedに合わせた、データが最後に存在する行番号
+            double[][] stapleAndProteinNutrients = new double[rowSize - 4][colSize - 3];
+            for(int rowIndex = 3; rowIndex <= rowSize - 2; rowIndex++){
                 Row row = sheet.getRow(rowIndex);
                 for (int colIndex = 4; colIndex <= colSize; colIndex++) {
                     Cell cell = row.getCell(colIndex);
                     double correc = row.getCell(2).getNumericCellValue() / 100;
-
                     stapleAndProteinNutrients[rowIndex - 3][colIndex - 4] = cell.getNumericCellValue() * correc;
                 }
                 //System.out.println(Arrays.toString(stapleAndProteinNutrients[rowIndex - 3]));
@@ -47,15 +46,15 @@ public class NutrientService {
     public double[] getTargets(){
         try (FileInputStream fis = new FileInputStream(new File(filePath_stapleAndProtein));
             Workbook workbook = new XSSFWorkbook(fis)) {
-            Sheet sheet = workbook.getSheetAt(0); //最初のシートを取得
-            int rowSize = sheet.getLastRowNum();    //0-indexedの、データが最後に存在する行番号
-            int colSize = sheet.getRow(3).getLastCellNum() - 1; //1-indexedの、〃列番号なので、0-indexedに合わせる
-            double[] targets = new double[colSize - 3];
-            Row row = sheet.getRow(rowSize);
+            Sheet sheet = workbook.getSheetAt(1); //シート2を取得
+            double[] targets = new double[14];  //14種類の摂取目標値
+            int colSize = 17;   //ビタミンCまでの範囲
+            Row row = sheet.getRow(sheet.getLastRowNum());
             for (int colIndex = 4; colIndex <= colSize; colIndex++) {
                 Cell cell = row.getCell(colIndex);
                 targets[colIndex - 4] = cell.getNumericCellValue();
             }
+            //System.out.println(Arrays.toString(targets));
             return targets;
         }catch(IOException e){
             e.printStackTrace();
@@ -67,9 +66,9 @@ public class NutrientService {
     public double[][] getVegetable(){
         try (FileInputStream fis = new FileInputStream(new File(filePath_vegetables));
             Workbook workbook = new XSSFWorkbook(fis)) {
-            Sheet sheet = workbook.getSheetAt(0); //最初のシートを取得
+            Sheet sheet = workbook.getSheetAt(1); //シート2を取得
             int rowSize = sheet.getLastRowNum();    //0-indexedの、データが最後に存在する行番号
-            int colSize = sheet.getRow(3).getLastCellNum() - 1; //1-indexedの、〃列番号なので、0-indexedに合わせる
+            int colSize = sheet.getRow(3).getLastCellNum() - 1; //0-indexedに合わせた、データが最後に存在する行番号
             double[][] vegetable = new double[rowSize - 2][colSize - 3];
             for(int rowIndex = 3; rowIndex <= rowSize; rowIndex++){
                 Row row = sheet.getRow(rowIndex);
@@ -91,7 +90,7 @@ public class NutrientService {
         Map<String, Double> unitPrice = new LinkedHashMap<>();
         try (FileInputStream fis = new FileInputStream(new File(filePath_vegetables));
             Workbook workbook = new XSSFWorkbook(fis)) {
-            Sheet sheet = workbook.getSheetAt(0); //最初のシートを取得
+            Sheet sheet = workbook.getSheetAt(1); //シート2を取得
             int rowSize = sheet.getLastRowNum();    //0-indexedの、データが最後に存在する行番号
             for(int rowIndex = 3; rowIndex <= rowSize; rowIndex++){
                 Row row = sheet.getRow(rowIndex);
