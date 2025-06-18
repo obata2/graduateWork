@@ -20,7 +20,7 @@ public class JsonProcesserService {
     Map<String, Integer> idAndPri = new LinkedHashMap<>();
     Map<String, Integer> ingAndPri = new LinkedHashMap<>();
 
-    //JSONのダウンロード
+    // --- JSONのダウンロード --- 
     public JsonNode downloadJSON() {
         final String BASE_URL = "http://api.e-stat.go.jp/rest/3.0/app/json/getStatsData";  //小売物価統計のurl
         final String appId = "ea754c2b09a9735a2f2ea4c33874796724e1e347"; //自分のAPIキー
@@ -52,7 +52,7 @@ public class JsonProcesserService {
     }
 
 
-    //データをCachedDataに書き込む
+    // --- データをCachedDataに書き込む --- 
     public void saveJSONToCache(JsonNode jsonNode) {
         final String FILE_PATH = "C:\\Users\\81809\\Desktop\\demo\\backend\\CachedData.json";
         ObjectMapper mapper = new ObjectMapper();
@@ -64,7 +64,7 @@ public class JsonProcesserService {
     }
 
 
-    //CachedDataを読み込み、変数()を用意
+    // --- CachedDataを読み込み、変数()を用意 --- 
     public void readJSONFromCache() {
         final String FILE_PATH = "C:\\Users\\81809\\Desktop\\demo\\backend\\CachedData.json";
         Map<String, String> idAndIng = new LinkedHashMap<>();
@@ -114,7 +114,7 @@ public class JsonProcesserService {
     }
     
 
-    //価格の配列を返す
+    // --- 価格の配列を返す --- 
     public double[] getPri(){
         readJSONFromCache();
         double[] prices = new double[this.ingAndPri.size()];
@@ -126,7 +126,7 @@ public class JsonProcesserService {
         return prices;
     }
 
-    //{食材：価格}のmapを返す
+    // --- {食材：価格}のmapを返す --- 
     public Map<String, Integer> getIngAndPri(){
         readJSONFromCache();
         //System.out.println(this.ingAndPri);
@@ -134,7 +134,7 @@ public class JsonProcesserService {
     }
 
     
-    //メタデータの確認
+    // --- メタデータの確認 --- 
     public String getMetaData() {
         try {
             RestTemplate restTemplate = new RestTemplate();
