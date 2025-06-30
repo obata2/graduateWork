@@ -8,6 +8,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.Map;
+import java.util.Arrays;
 import java.util.LinkedHashMap;
 
 @Service
@@ -31,21 +32,20 @@ public class NutrientService {
         }
     }
 
-    // --- 1食分の目安量で補正しながら、主食・肉類の栄養テーブルを返す --- 
+    // ---主食・肉類の栄養テーブルを返す --- 
     public double[][] getStapleAndProtein(){
         try{
             Sheet sheet = this.workbook_sta.getSheetAt(0);
             int startRowNum = 3;    //"うるち米(コシヒカリ)"の行
             int rowSize = sheet.getLastRowNum();    //0-indexedの、データが最後に存在する行番号
-            int startColNum = 3;    //"1食分の目安量"の列
+            int startColNum = 4;    //"タンパク質"の列
             int colSize = sheet.getRow(startRowNum).getLastCellNum() - 1; //0-indexedに合わせた、データが最後に存在する列番号
             double[][] stapleAndProteinNutrients = new double[rowSize + 1 - 5][colSize + 1 - 4];    //5行分、4列分の栄養素データではない部分を除外したサイズ
             for(int rowIndex = startRowNum; rowIndex <= rowSize - 2; rowIndex++){
                 Row row = sheet.getRow(rowIndex);
-                for (int colIndex = startColNum + 1; colIndex <= colSize; colIndex++) {
+                for (int colIndex = startColNum; colIndex <= colSize; colIndex++) {
                     Cell cell = row.getCell(colIndex);
-                    double correc = row.getCell(startColNum).getNumericCellValue() / 100; //1食分の目安量での補正係数
-                    stapleAndProteinNutrients[rowIndex - startRowNum][colIndex - startColNum - 1] = cell.getNumericCellValue() * correc;
+                    stapleAndProteinNutrients[rowIndex - startRowNum][colIndex - startColNum] = cell.getNumericCellValue();
                 }
                 //System.out.println(Arrays.toString(stapleAndProteinNutrients[rowIndex - startRowNum]));
             }
@@ -55,6 +55,29 @@ public class NutrientService {
             return null;
         }
     }
+
+
+    // ---主食・肉類の1食分の目安量を返す ---
+    public double[] getStaVolOfsAndP(){
+        try{
+            Sheet sheet = this.workbook_sta.getSheetAt(0);
+            int startRowNum = 3;    //"うるち米(コシヒカリ)"の行
+            int rowSize = sheet.getLastRowNum();    //0-indexedの、データが最後に存在する行番号
+            int colNum = 3;    //"1食分の目安量"の列
+            double[] staVolOfsAndP = new double[rowSize + 1 - 5];    //5行分の余計な部分を除外したサイズ
+            for(int rowIndex = startRowNum; rowIndex <= rowSize - 2; rowIndex++){
+                Row row = sheet.getRow(rowIndex);
+                Cell cell = row.getCell(colNum);
+                staVolOfsAndP[rowIndex - startRowNum] = cell.getNumericCellValue();
+            }
+            //System.out.println(Arrays.toString(staVolOfsAndP));
+            return staVolOfsAndP;
+        }catch(Exception e){
+            e.printStackTrace();
+            return null;
+        }
+    }
+
 
     // --- 目標値のテーブルを返す --- 
     public double[] getTargets(){
@@ -121,7 +144,7 @@ public class NutrientService {
         }
     }
 
-    // --- 1食分の目安量を返す --- 
+    // --- 野菜類の1食分の目安量を返す --- 
     public double[] getMinimumVolOfVeg(){
         try {
             Sheet sheet = this.workbook_veg.getSheetAt(0);
