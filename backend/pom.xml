@@ -65,6 +65,26 @@
 		  <version>3.6.1</version>
 		</dependency>
 
+		<dependency>
+		  <groupId>com.google.ortools</groupId>
+		  <artifactId>ortools-java</artifactId>
+		  <version>local</version>
+		  <scope>system</scope>
+		  <systemPath>C:\Users\81809\Desktop\demo\backend\libs\ortools-java-9.14.6206.jar</systemPath>
+		</dependency>
+
+		<dependency>
+		  <groupId>com.google.protobuf</groupId>
+		  <artifactId>protobuf-java</artifactId>
+		  <version>4.31.1</version>
+		</dependency>
+
+		<dependency>
+		  <groupId>net.java.dev.jna</groupId>
+		  <artifactId>jna</artifactId>
+		  <version>5.14.0</version>
+		</dependency>
+
 	</dependencies>
 	
 	<build>

@@ -35,7 +35,7 @@ public class testLP {
     //主食：こめ~中華麺
     for(int i=0; i<4; i++){
       //たんぱく源：牛・豚・鶏の各部位
-      for(int j=23; j<stapleAndProtein.length; j++){
+      for(int j=4; j<stapleAndProtein.length; j++){
         double[] targets = modifyTargets(nutrientService.getTargets(), stapleAndProtein, staVolOfsAndP,  i, j); //補正済みの目標値
         double[] fixedEnergyValue = fixEnergy(stapleAndProtein, staVolOfsAndP, i, j);  //主食・肉類を所与としたエネルギーの固定値
         //解く     (ただし、prices,nutrientsは固定し、targetだけ補正して返す→目的関数は固定)
@@ -45,15 +45,17 @@ public class testLP {
           break;
         }
         double[] result = resultOpt.get();
+        //計算結果のグラム数を小数第3位までに丸める
         for(int l=0; l<result.length; l++){
           result[l] = Math.round(result[l] * 1000.0) / 1000.0;
         }
+        double[] realize = checkRealize(targets, result, stapleAndProtein, staVolOfsAndP, transpose(vegetable), i, j);  //実現値(総カロリー、栄養量)
         System.out.println(spIng[i] + " " + staVolOfsAndP[i] + "g , " + spIng[j] + " " + staVolOfsAndP[j] + "g -> " + formatResult(result));  //選択された組み合わせ
         System.out.println("合計価格 : " + getTotalPrice(result, prices) + " 円");  //合計価格の計算
-        double[] realize = checkRealize(targets, result, stapleAndProtein, staVolOfsAndP, transpose(vegetable), i, j);  //実現値(総カロリー、栄養量)
         System.out.println("実現値 : " +formatRealize(realize));
+        System.out.println("-----------------------------------------------------------------");
         
-        break;
+        //break;
       }
       long elapsed = System.currentTimeMillis() - startTime;
       if (elapsed > timeout) {
@@ -61,7 +63,7 @@ public class testLP {
           break;
       }
 
-      break;
+      //break;
     }
     System.out.println((System.currentTimeMillis() - startTime) + "ミリ秒で処理完了");
   }
