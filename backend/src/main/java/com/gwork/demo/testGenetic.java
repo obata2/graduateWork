@@ -22,8 +22,8 @@ public class testGenetic {
   static NutrientService nutrientService = new NutrientService();
   static double[][] stapleAndProtein = nutrientService.getStapleAndProtein(); //主食・肉の栄養テーブル
   static double[][] vegetable = nutrientService.getVegetable(); //野菜類の栄養テーブル
-  static double[] prices = setPrices(nutrientService.getUnitPrice(), jsonProcesserService.getIngAndPri()); //100gあたりの野菜類の価格情報
-  static double[] minVolOfVeg = nutrientService.getMinimumVolOfVeg(); //野菜類の1食分の最低量
+  static double[] prices = setPrices(nutrientService.getPriceUnit(), jsonProcesserService.getIngAndPri()); //100gあたりの野菜類の価格情報
+  static double[] minVolOfVeg = nutrientService.getStaVolOfVeg(); //野菜類の1食分の最低量
   static double[] staVolOfsAndP = nutrientService.getStaVolOfsAndP(); //主食・肉類の1食分の目安量
   static double[] targets = nutrientService.getTargets(); //目標値のテーブル
   
