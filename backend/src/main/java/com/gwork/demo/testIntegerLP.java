@@ -6,6 +6,7 @@ import java.util.Optional;
 import java.util.Arrays;
 import java.util.HashMap;
 
+import com.gwork.demo.Service.DataAdjusterService;
 import com.gwork.demo.Service.JsonProcesserService;
 import com.gwork.demo.Service.NutrientService;
 
@@ -24,26 +25,10 @@ public class testIntegerLP {
   }
 
   public static void main(String args[]){
-    JsonProcesserService jsonProcesserService = new JsonProcesserService();
-    NutrientService nutrientService = new NutrientService();
 
-    double[][] stapleAndProtein = nutrientService.getStapleAndProtein(); //主食・肉の栄養テーブル
-    double[][] vegetable = nutrientService.getVegetable(); //野菜類の栄養テーブル <- (constarintsに合わせるため、ここで転置)
-    double[] prices = setPrices(nutrientService.getPriceUnit(), jsonProcesserService.getIngAndPri()); //100gあたりの野菜類の価格情報
-    double[] staVolOfVeg = nutrientService.getStaVolOfVeg();
-    double[] staVolOfsAndP = nutrientService.getStaVolOfsAndP();
-    String[] spIng = {"うるち米(単一原料米,「コシヒカリ」)","ゆでうどん","スパゲッティ","中華麺","牛肉(かた)","牛肉(かたロース)","牛肉(リブロース)","牛肉(サーロイン)","牛肉(ばら)","牛肉(もも)","牛肉(そともも)","牛肉(ランプ)","牛肉(ヒレ)","豚肉(かた)","豚肉(かたロース)","豚肉(ロース)","豚肉(ばら)","豚肉(もも)","豚肉(そともも)","豚肉(ヒレ)","鶏肉(手羽)","鶏肉(手羽さき)","鶏肉(手羽もと)","鶏肉(むね)","鶏肉(もも)","鶏肉(ささみ)","鶏肉(ひきにく)"};
-    String[] vegIng = {"牛乳(店頭売り,紙容器入り)","チーズ(国産品)","チーズ(輸入品)","ヨーグルト","鶏卵","キャベツ","ほうれんそう","はくさい","ねぎ","レタス","もやし","ブロッコリー","アスパラガス","さつまいも","じゃがいも","さといも","だいこん","にんじん","ごぼう","たまねぎ","れんこん","ながいも","えだまめ","さやいんげん","かぼちゃ","きゅうり","なす","トマト","ピーマン","生しいたけ","えのきたけ","しめじ","わかめ","ひじき","豆腐","油揚げ","納豆","こんにゃく"};
-    Map<String, Integer> specific = Map.of(
-      "牛乳(店頭売り,紙容器入り)", 100,
-      "鶏卵", 60,
-      "豆腐", 50,
-      "納豆", 40
-    );
-    int[] unitQuantity = getUnitQuantity(vegIng, specific);
-    System.out.println(Arrays.toString(unitQuantity));
-    vegetable = modifyNutrients(vegetable, unitQuantity);
-    prices = modifyPrices(prices, unitQuantity);
+    double[][] stapleAndProtein = DataAdjusterService.stapleAndProtein;
+    String[] spIng ={"うるち米(単一原料米,「コシヒカリ」)","ゆでうどん","スパゲッティ","中華麺","牛肉(かた)","牛肉(かたロース)","牛肉(リブロース)","牛肉(サーロイン)","牛肉(ばら)","牛肉(もも)","牛肉(そともも)","牛肉(ランプ)","牛肉(ヒレ)","豚肉(かた)","豚肉(かたロース)","豚肉(ロース)","豚肉(ばら)","豚肉(もも)","豚肉(そともも)","豚肉(ヒレ)","鶏肉(手羽)","鶏肉(手羽さき)","鶏肉(手羽もと)","鶏肉(むね)","鶏肉(もも)","鶏肉(ささみ)","鶏肉(ひきにく)"};
+    int[] staVolOfsAndP = DataAdjusterService.staVolOfsAndP;
 
     long startTime = System.currentTimeMillis(); // 開始時刻を記録
     long timeout = 6000; // 時間制限(ミリ秒)
@@ -51,21 +36,20 @@ public class testIntegerLP {
     System.out.println("Google OR-Tools version: " + OrToolsVersion.getVersionString());
 
     //解いてみる
-    for(int i=0; i<4; i++){
-      for(int j=4; j<stapleAndProtein.length; j++){
+    for(int stapleIndex=0; stapleIndex<4; stapleIndex++){
+      for(int proteinIndex=4; proteinIndex<stapleAndProtein.length; proteinIndex++){
         System.out.println("-------------------------------------------------------------");
-        System.out.println(spIng[i] + " " + staVolOfsAndP[i] + "g , " + spIng[j] + " " + staVolOfsAndP[j] + "g で計算");
-        double[] targets = modifyTargets(nutrientService.getTargets(), stapleAndProtein, staVolOfsAndP,  i, j); //補正済みの目標値
-        double[] fixedEnergyValue = fixEnergy(stapleAndProtein, staVolOfsAndP, i, j);  //主食・肉類を所与としたエネルギーの固定値
-        Optional<int []> resultOpt = solveILP(prices, targets, vegetable, fixedEnergyValue);
+        System.out.println(spIng[stapleIndex] + " " + staVolOfsAndP[stapleIndex] + "g , " + spIng[proteinIndex] + " " + staVolOfsAndP[proteinIndex] + "g で計算");
+        DataAdjusterService dataAdjusterService = new DataAdjusterService(stapleIndex, proteinIndex);
+        Optional<int []> resultOpt = solveILP(dataAdjusterService);
         if(!resultOpt.isPresent()){   //計算不可ならばスキップ
-          System.out.println(spIng[i] + " , " + spIng[j] + " -> 計算不可能です");
+          System.out.println(spIng[stapleIndex] + " , " + spIng[proteinIndex] + " -> 計算不可能です");
           return;
         }
         int[] result = resultOpt.get();
-        System.out.println(formatResult(result, vegIng, unitQuantity));
-        double[] realize = checkRealize(targets, result, stapleAndProtein, staVolOfsAndP, vegetable, i, j);
-        //break;
+        System.out.println(formatResult(result));
+        double[] realize = checkRealize(result, dataAdjusterService, stapleIndex, proteinIndex);
+        
       }
       break;
     }
@@ -75,15 +59,20 @@ public class testIntegerLP {
 
 
   // --- ILPで解く ---
-  public static Optional<int []> solveILP(double[] prices, double[] targets, double[][] vegetable, double[] fixedEnergyValue) {
+  public static Optional<int []> solveILP(DataAdjusterService dataAdjusterService) {
+    double[] prices = DataAdjusterService.prices;
+    double[][] vegetable = DataAdjusterService.vegetable;
+    int[] staVolOfVeg = DataAdjusterService.staVolOfVeg;
+    double[] modifiedTargets = dataAdjusterService.modifiedTargets;
+    double[] fixedEnergyValue = dataAdjusterService.fixedEnergyValue;
     MPSolver solver = MPSolver.createSolver("CBC");
     if (solver == null) {
       System.err.println("Solverを生成できません。");
       return Optional.empty();
     }
     int vegNum = prices.length;
-    int nutNum = targets.length;
-    //変数を定義する    x[]:食材iの数量
+    int nutNum = modifiedTargets.length;
+    //変数を定義する    x[]:食材iの数量     0~(1食分の目安量の2倍まで)
     MPVariable[] x = new MPVariable[vegNum];
     for (int i = 0; i < vegNum; i++) {
       x[i] = solver.makeIntVar(0.0, Double.POSITIVE_INFINITY, "x_" + i);
@@ -91,7 +80,7 @@ public class testIntegerLP {
     // 栄養素目標の制約    sum_i (vegetable[i][j] * x[i]) >= targets[j]
     for (int j = 0; j < nutNum; j++) {
       //栄養素jの目標値を設定
-      MPConstraint constraint = solver.makeConstraint(targets[j], Double.POSITIVE_INFINITY, "nutrient_" + j);
+      MPConstraint constraint = solver.makeConstraint(modifiedTargets[j], Double.POSITIVE_INFINITY, "nutrient_" + j);
       for (int i = 0; i < vegNum; i++) {
         //食材iに含まれる量を係数とする
         constraint.setCoefficient(x[i], vegetable[i][j]);
@@ -133,68 +122,31 @@ public class testIntegerLP {
       System.out.println("計算結果は" + Arrays.toString(solution));
       return Optional.of(solution);
     } else {
-      System.out.println("optiml solution が見つけられませんでした");
+      System.out.println("optimal solution が見つけられませんでした");
       return Optional.empty();
     }
   }
 
 
-  // --- 価格をarrayとして持つ ---
-  public static double[] setPrices(Map<String, Double> unitPrice, Map<String, Integer> ingAndPri){
-    for(String key : unitPrice.keySet()){
-      if(ingAndPri.containsKey(key)){
-        unitPrice.put(key, ingAndPri.get(key) / unitPrice.get(key) * 100);
-      }
-    }
-    double[] prices = new double[unitPrice.size()];
-    int i=0;
-    for(double value : unitPrice.values()){
-      prices[i] = value;
-      i++;
-    }
-    return prices;
-  }
-
-
-   // --- 主食・肉類を所与とした栄養素目標値の補正 --- 
-  public static double[] modifyTargets(double[] targets, double[][] stapleAndProtein, double[] staVolOfsAndP, int i, int j){
-    for(int k=0; k<targets.length; k++){
-      double sVolCoeff = staVolOfsAndP[i] / 100;  //100gを1単位とした時の係数
-      double pVolCoeff = staVolOfsAndP[j] / 100;  //同様に
-      targets[k] = Math.max(0, (targets[k] - stapleAndProtein[i][k] * sVolCoeff - stapleAndProtein[j][k] * pVolCoeff));
-    }
-    return targets;
-  }
-
-
-  // --- 主食・肉類を所与としたエネルギーの固定値 --- 
-  public static double[] fixEnergy(double[][] stapleAndProtein, double[] staVolOfsAndP, int i, int j){
-    double[] fixedEnergyValue = new double[6];  //"pi-0.13ti" ～ "ci-0.65ti"まで
-    int lastColNum = stapleAndProtein[i].length - 1;
-    double sVolCoeff = staVolOfsAndP[i] / 100;  //100gを1単位とした時の係数
-    double pVolCoeff = staVolOfsAndP[j] / 100;  //同様に
-    for(int k=0; k<fixedEnergyValue.length; k++){
-      fixedEnergyValue[k] = stapleAndProtein[i][lastColNum - 5 + k] * sVolCoeff + stapleAndProtein[j][lastColNum - 5 + k] * pVolCoeff;
-    }
-    return fixedEnergyValue;
-  }
-
-
   // --- 実現値を確認する --- 
-  public static double[] checkRealize(double[] targets, int[] result, double[][] stapleAndProtein, double[] staVolOfsAndP, double[][] vegetable, int i, int j){    
-    double[] realize = new double[targets.length];
+  public static double[] checkRealize(int[] result, DataAdjusterService dataAdjusterService, int stapleIndex, int proteinIndex){
+    double[] modifiedTargets = dataAdjusterService.modifiedTargets;
+    double[][] stapleAndProtein = DataAdjusterService.stapleAndProtein;
+    int[] staVolOfsAndP = DataAdjusterService.staVolOfsAndP;
+    double[][] vegetable = DataAdjusterService.vegetable;
+    double[] realize = new double[modifiedTargets.length];
     int pCalColNum = (stapleAndProtein[0].length - 1) - 9;  //"タンパク質のエネルギー"の列番号
     int fCalColNum = pCalColNum + 1;
     int cCalColNum = pCalColNum + 2;
     int tCalColNum = pCalColNum + 3;
     //主食・肉類のカロリーと
-    double totalkcal = stapleAndProtein[i][tCalColNum] * (staVolOfsAndP[i] / 100) + stapleAndProtein[j][tCalColNum] * (staVolOfsAndP[j] / 100);
-    double pkcal = stapleAndProtein[i][pCalColNum] * (staVolOfsAndP[i] / 100) + stapleAndProtein[j][pCalColNum] * (staVolOfsAndP[j] / 100);
-    double fkcal = stapleAndProtein[i][fCalColNum] * (staVolOfsAndP[i] / 100) + stapleAndProtein[j][fCalColNum] * (staVolOfsAndP[j] / 100);
-    double ckcal = stapleAndProtein[i][cCalColNum] * (staVolOfsAndP[i] / 100) + stapleAndProtein[j][cCalColNum] * (staVolOfsAndP[j] / 100);
+    double totalkcal = stapleAndProtein[stapleIndex][tCalColNum] * (staVolOfsAndP[stapleIndex] / 100) + stapleAndProtein[proteinIndex][tCalColNum] * (staVolOfsAndP[proteinIndex] / 100);
+    double pkcal = stapleAndProtein[stapleIndex][pCalColNum] * (staVolOfsAndP[stapleIndex] / 100) + stapleAndProtein[proteinIndex][pCalColNum] * (staVolOfsAndP[proteinIndex] / 100);
+    double fkcal = stapleAndProtein[stapleIndex][fCalColNum] * (staVolOfsAndP[stapleIndex] / 100) + stapleAndProtein[proteinIndex][fCalColNum] * (staVolOfsAndP[proteinIndex] / 100);
+    double ckcal = stapleAndProtein[stapleIndex][cCalColNum] * (staVolOfsAndP[stapleIndex] / 100) + stapleAndProtein[proteinIndex][cCalColNum] * (staVolOfsAndP[proteinIndex] / 100);
     //栄養素を足していく
-    for(int k=0; k<targets.length; k++){
-      realize[k] += stapleAndProtein[i][k] * (staVolOfsAndP[i] / 100) + stapleAndProtein[j][k] * (staVolOfsAndP[j] / 100);
+    for(int k=0; k<modifiedTargets.length; k++){
+      realize[k] += stapleAndProtein[stapleIndex][k] * (staVolOfsAndP[stapleIndex] / 100) + stapleAndProtein[proteinIndex][k] * (staVolOfsAndP[proteinIndex] / 100);
     }
     //野菜類の
     for(int m=0; m<vegetable.length; m++){
@@ -204,7 +156,7 @@ public class testIntegerLP {
       fkcal += vegetable[m][fCalColNum] * result[m];
       ckcal += vegetable[m][cCalColNum] * result[m];
       //栄養素を足す
-      for(int n=0; n<targets.length; n++){
+      for(int n=0; n<modifiedTargets.length; n++){
         realize[n] += vegetable[m][n] * result[m];
       }
     }
@@ -216,7 +168,8 @@ public class testIntegerLP {
 
 
   // --- 合計価格の計算 --- 
-  public static double getTotalPrice(double[] result, double[] prices){
+  public static double getTotalPrice(double[] result){
+    double[] prices = DataAdjusterService.prices;
     double totalPrice = 0;
     for(int i=0; i<result.length; i++){
       totalPrice += result[i] * prices[i];
@@ -226,7 +179,9 @@ public class testIntegerLP {
 
 
   // --- resultを分かりやすく表示 --- 
-  private static Map<String, String> formatResult(int[] result, String[] vegIng, int[] unitQuantity){
+  private static Map<String, String> formatResult(int[] result){
+    String[] vegIng = DataAdjusterService.vegIng;
+    int[] unitQuantity = DataAdjusterService.unitQuantity;
     LinkedHashMap<String, String> formatResult = new LinkedHashMap<>();
     for(int i=0; i<result.length; i++){
       if(result[i] != 0){
@@ -247,41 +202,5 @@ public class testIntegerLP {
       }
     }
     return formatRealize;
-  }
-
-
-  // --- 計算に用いる単位数量を返す ---
-  public static int[] getUnitQuantity(String[] vegIng, Map<String, Integer> specific){
-    int[] unitQuantity = new int[vegIng.length];
-    for(int i=0; i<vegIng.length; i++){
-      if(specific.containsKey(vegIng[i])){
-        unitQuantity[i] = specific.get(vegIng[i]);
-      }else{
-        unitQuantity[i] = 10;
-      }
-    }
-    return unitQuantity;
-  }
-
-
-  // --- 単位数量で野菜類の栄養テーブルを修正 ---
-  public static double[][] modifyNutrients(double[][] vegetable, int[] unitQuantity){
-    for(int i=0; i<vegetable.length; i++){
-      for(int j=0; j<vegetable[i].length; j++){
-        vegetable[i][j] = vegetable[i][j] * unitQuantity[i] / 100;
-      }
-      //System.out.println(Arrays.toString(vegetable[i]));
-    }
-    return vegetable;
-  }
-
-
-  // --- 単位数量で価格を修正 ---
-  public static double[] modifyPrices(double[] prices, int[] unitQuantity){
-    for(int i=0; i<prices.length; i++){
-      prices[i] = prices[i] * unitQuantity[i] / 100;
-    }
-    //System.out.println(Arrays.toString(prices));
-    return prices;
   }
 }

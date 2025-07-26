@@ -23,8 +23,8 @@ public class testGenetic {
   static double[][] stapleAndProtein = nutrientService.getStapleAndProtein(); //主食・肉の栄養テーブル
   static double[][] vegetable = nutrientService.getVegetable(); //野菜類の栄養テーブル
   static double[] prices = setPrices(nutrientService.getPriceUnit(), jsonProcesserService.getIngAndPri()); //100gあたりの野菜類の価格情報
-  static double[] minVolOfVeg = nutrientService.getStaVolOfVeg(); //野菜類の1食分の最低量
-  static double[] staVolOfsAndP = nutrientService.getStaVolOfsAndP(); //主食・肉類の1食分の目安量
+  static int[] staVolOfVeg = nutrientService.getStaVolOfVeg(); //野菜類の1食分の最低量
+  static int[] staVolOfsAndP = nutrientService.getStaVolOfsAndP(); //主食・肉類の1食分の目安量
   static double[] targets = nutrientService.getTargets(); //目標値のテーブル
   
   // --- メインループ ---
@@ -78,14 +78,14 @@ public class testGenetic {
           int minMultiplier = 0; // 0単位から
           int maxMultiplier = 3; // 3単位まで
           int multiplier = minMultiplier + (int)(Math.random() * (maxMultiplier - minMultiplier + 1));
-          genes[j] = minVolOfVeg[j] * multiplier;
+          genes[j] = staVolOfVeg[j] * multiplier;
           continue;
         }
         if(Math.random() < 0.2){
           genes[j] = 0; //20%の確率で0グラム
         }else{
-          double min = minVolOfVeg[j] * 0.5;
-          double max = minVolOfVeg[j] * 2.0;
+          double min = staVolOfVeg[j] * 0.5;
+          double max = staVolOfVeg[j] * 2.0;
           double step = 10.0;
           int minStep = (int)(min / step);
           int maxStep = (int)(max / step);

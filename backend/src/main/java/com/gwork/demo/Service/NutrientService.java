@@ -65,17 +65,17 @@ public class NutrientService {
 
 
     // ---主食・肉類の1食分の目安量を返す ---
-    public double[] getStaVolOfsAndP(){
+    public int[] getStaVolOfsAndP(){
         try{
             Sheet sheet = this.workbook_sta.getSheetAt(0);
             int startRowNum = 3;    //"うるち米(コシヒカリ)"の行から
             int lastRowNum = sheet.getLastRowNum();    //"鶏肉(ひき肉)"の行まで  (0-indexed)
             int colNum = 3;    //"1食分の目安量"の列
-            double[] staVolOfsAndP = new double[(lastRowNum + 1) - 3];    //3行分の余計な部分を除外したサイズ
+            int[] staVolOfsAndP = new int[(lastRowNum + 1) - 3];    //3行分の余計な部分を除外したサイズ
             for(int i = startRowNum; i <= lastRowNum; i++){
                 Row row = sheet.getRow(i);
                 Cell cell = row.getCell(colNum);
-                staVolOfsAndP[i - startRowNum] = cell.getNumericCellValue();
+                staVolOfsAndP[i - startRowNum] = (int) cell.getNumericCellValue();
             }
             //System.out.println("主食・肉類1食分の目安量：" + Arrays.toString(staVolOfsAndP));
             return staVolOfsAndP;
@@ -106,6 +106,7 @@ public class NutrientService {
         }
     }
 
+
     // --- 野菜類の栄養テーブルを返す --- 
     public double[][] getVegetable(){
         //System.out.println("野菜類の栄養素テーブル：");
@@ -131,7 +132,7 @@ public class NutrientService {
         }
     }
 
-    // --- 野菜類に関して、価格を補正するための辞書を返す --- 
+    // --- 野菜類に関して、価格の単位グラム数の辞書を返す --- 
     public Map<String, Double> getPriceUnit(){
         Map<String, Double> priceUnit = new LinkedHashMap<>();
         try {
@@ -153,17 +154,17 @@ public class NutrientService {
     }
 
     // --- 野菜類の1食分の目安量を返す --- 
-    public double[] getStaVolOfVeg(){
+    public int[] getStaVolOfVeg(){
         try {
             Sheet sheet = this.workbook_veg.getSheetAt(0);
             int startRowNum = 3;    //"牛乳(店頭売り、紙容器入り)"の行から
             int lastRowNum = sheet.getLastRowNum();    //"こんにゃく"の行まで  (0-indexed)
             int staVolColNum = 3;  //"1食分の目安量"の列
-            double[] staVolOfVeg = new double[(lastRowNum + 1) - 3]; //3行分の余計な部分を除外したサイズ
+            int[] staVolOfVeg = new int[(lastRowNum + 1) - 3]; //3行分の余計な部分を除外したサイズ
             for(int i = startRowNum; i <= lastRowNum; i++){
                 Row row = sheet.getRow(i);
                 Cell cell = row.getCell(staVolColNum);
-                staVolOfVeg[i - startRowNum] = cell.getNumericCellValue();
+                staVolOfVeg[i - startRowNum] = (int) cell.getNumericCellValue();
             }
             //System.out.println("野菜類1食分の目安量：" + Arrays.toString(staVolOfVeg));
             return staVolOfVeg;

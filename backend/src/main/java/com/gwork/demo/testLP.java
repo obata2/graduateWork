@@ -24,8 +24,8 @@ public class testLP {
     double[][] stapleAndProtein = nutrientService.getStapleAndProtein(); //主食・肉の栄養テーブル
     double[][] vegetable = transpose(nutrientService.getVegetable()); //野菜類の栄養テーブル <- (constarintsに合わせるため、ここで転置)
     double[] prices = setPrices(nutrientService.getPriceUnit(), jsonProcesserService.getIngAndPri()); //100gあたりの野菜類の価格情報
-    double[] minVolOfVeg = nutrientService.getStaVolOfVeg();
-    double[] staVolOfsAndP = nutrientService.getStaVolOfsAndP();
+    int[] staVolOfVeg = nutrientService.getStaVolOfVeg();
+    int[] staVolOfsAndP = nutrientService.getStaVolOfsAndP();
     String[] spIng = {"うるち米(単一原料米,「コシヒカリ」)","ゆでうどん","スパゲッティ","中華麺","牛肉(かた)","牛肉(かたロース)","牛肉(リブロース)","牛肉(サーロイン)","牛肉(ばら)","牛肉(もも)","牛肉(そともも)","牛肉(ランプ)","牛肉(ヒレ)","豚肉(かた)","豚肉(かたロース)","豚肉(ロース)","豚肉(ばら)","豚肉(もも)","豚肉(そともも)","豚肉(ヒレ)","鶏肉(手羽)","鶏肉(手羽さき)","鶏肉(手羽もと)","鶏肉(むね)","鶏肉(もも)","鶏肉(ささみ)","鶏肉(ひきにく)"};
 
     long startTime = System.currentTimeMillis(); // 開始時刻を記録
@@ -147,7 +147,7 @@ public class testLP {
 
 
   // --- 主食・肉類を所与とした栄養素目標値の補正 --- 
-  public static double[] modifyTargets(double[] targets, double[][] stapleAndProtein, double[] staVolOfsAndP, int i, int j){
+  public static double[] modifyTargets(double[] targets, double[][] stapleAndProtein, int[] staVolOfsAndP, int i, int j){
     for(int k=0; k<targets.length; k++){
       double sVolCoeff = staVolOfsAndP[i] / 100;
       double pVolCoeff = staVolOfsAndP[j] / 100;
@@ -158,7 +158,7 @@ public class testLP {
 
 
   // --- 主食・肉類を所与としたエネルギーの固定値 --- 
-  public static double[] fixEnergy(double[][] stapleAndProtein, double[] staVolOfsAndP, int i, int j){
+  public static double[] fixEnergy(double[][] stapleAndProtein, int[] staVolOfsAndP, int i, int j){
     double[] fixedEnergyValue = new double[6];  //"pi-0.13ti" ～ "ci-0.65ti"まで
     int lastColNum = stapleAndProtein[i].length - 1;
     double sVolCoeff = staVolOfsAndP[i] / 100;
@@ -171,7 +171,7 @@ public class testLP {
 
 
   // --- 実現値を確認する --- 
-  public static double[] checkRealize(double[] targets, double[] result, double[][] stapleAndProtein, double[] staVolOfsAndP, double[][] vegetable, int i, int j){    
+  public static double[] checkRealize(double[] targets, double[] result, double[][] stapleAndProtein, int[] staVolOfsAndP, double[][] vegetable, int i, int j){    
     double[] realize = new double[targets.length];
     int pCalColNum = stapleAndProtein[0].length - 1 - 9;  //"タンパク質のエネルギー"の列番号
     int fCalColNum = pCalColNum + 1;
