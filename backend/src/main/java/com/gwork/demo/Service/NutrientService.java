@@ -65,17 +65,17 @@ public class NutrientService {
 
 
     // ---主食・肉類の1食分の目安量を返す ---
-    public int[] getStaVolOfsAndP(){
+    public double[] getStaVolOfsAndP(){
         try{
             Sheet sheet = this.workbook_sta.getSheetAt(0);
             int startRowNum = 3;    //"うるち米(コシヒカリ)"の行から
             int lastRowNum = sheet.getLastRowNum();    //"鶏肉(ひき肉)"の行まで  (0-indexed)
             int colNum = 3;    //"1食分の目安量"の列
-            int[] staVolOfsAndP = new int[(lastRowNum + 1) - 3];    //3行分の余計な部分を除外したサイズ
+            double[] staVolOfsAndP = new double[(lastRowNum + 1) - 3];    //3行分の余計な部分を除外したサイズ
             for(int i = startRowNum; i <= lastRowNum; i++){
                 Row row = sheet.getRow(i);
                 Cell cell = row.getCell(colNum);
-                staVolOfsAndP[i - startRowNum] = (int) cell.getNumericCellValue();
+                staVolOfsAndP[i - startRowNum] = cell.getNumericCellValue();
             }
             //System.out.println("主食・肉類1食分の目安量：" + Arrays.toString(staVolOfsAndP));
             return staVolOfsAndP;
@@ -154,17 +154,17 @@ public class NutrientService {
     }
 
     // --- 野菜類の1食分の目安量を返す --- 
-    public int[] getStaVolOfVeg(){
+    public double[] getStaVolOfVeg(){
         try {
             Sheet sheet = this.workbook_veg.getSheetAt(0);
             int startRowNum = 3;    //"牛乳(店頭売り、紙容器入り)"の行から
             int lastRowNum = sheet.getLastRowNum();    //"こんにゃく"の行まで  (0-indexed)
             int staVolColNum = 3;  //"1食分の目安量"の列
-            int[] staVolOfVeg = new int[(lastRowNum + 1) - 3]; //3行分の余計な部分を除外したサイズ
+            double[] staVolOfVeg = new double[(lastRowNum + 1) - 3]; //3行分の余計な部分を除外したサイズ
             for(int i = startRowNum; i <= lastRowNum; i++){
                 Row row = sheet.getRow(i);
                 Cell cell = row.getCell(staVolColNum);
-                staVolOfVeg[i - startRowNum] = (int) cell.getNumericCellValue();
+                staVolOfVeg[i - startRowNum] = cell.getNumericCellValue();
             }
             //System.out.println("野菜類1食分の目安量：" + Arrays.toString(staVolOfVeg));
             return staVolOfVeg;

@@ -4,11 +4,8 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Arrays;
-import java.util.HashMap;
 
 import com.gwork.demo.Service.DataAdjusterService;
-import com.gwork.demo.Service.JsonProcesserService;
-import com.gwork.demo.Service.NutrientService;
 
 import com.google.ortools.init.OrToolsVersion;
 import com.google.ortools.linearsolver.MPConstraint;
@@ -28,7 +25,7 @@ public class testIntegerLP {
 
     double[][] stapleAndProtein = DataAdjusterService.stapleAndProtein;
     String[] spIng ={"うるち米(単一原料米,「コシヒカリ」)","ゆでうどん","スパゲッティ","中華麺","牛肉(かた)","牛肉(かたロース)","牛肉(リブロース)","牛肉(サーロイン)","牛肉(ばら)","牛肉(もも)","牛肉(そともも)","牛肉(ランプ)","牛肉(ヒレ)","豚肉(かた)","豚肉(かたロース)","豚肉(ロース)","豚肉(ばら)","豚肉(もも)","豚肉(そともも)","豚肉(ヒレ)","鶏肉(手羽)","鶏肉(手羽さき)","鶏肉(手羽もと)","鶏肉(むね)","鶏肉(もも)","鶏肉(ささみ)","鶏肉(ひきにく)"};
-    int[] staVolOfsAndP = DataAdjusterService.staVolOfsAndP;
+    double[] staVolOfsAndP = DataAdjusterService.staVolOfsAndP;
 
     long startTime = System.currentTimeMillis(); // 開始時刻を記録
     long timeout = 6000; // 時間制限(ミリ秒)
@@ -49,7 +46,7 @@ public class testIntegerLP {
         int[] result = resultOpt.get();
         System.out.println(formatResult(result));
         double[] realize = checkRealize(result, dataAdjusterService, stapleIndex, proteinIndex);
-        
+        break;
       }
       break;
     }
@@ -57,14 +54,14 @@ public class testIntegerLP {
   }
 
 
-
   // --- ILPで解く ---
   public static Optional<int []> solveILP(DataAdjusterService dataAdjusterService) {
-    double[] prices = DataAdjusterService.prices;
-    double[][] vegetable = DataAdjusterService.vegetable;
-    int[] staVolOfVeg = DataAdjusterService.staVolOfVeg;
-    double[] modifiedTargets = dataAdjusterService.modifiedTargets;
-    double[] fixedEnergyValue = dataAdjusterService.fixedEnergyValue;
+    final double[] prices = DataAdjusterService.prices;
+    final double[][] vegetable = DataAdjusterService.vegetable;
+    final double[] baseAmountOfCalc = DataAdjusterService.baseAmountOfCalc;
+    System.out.println(Arrays.toString(baseAmountOfCalc));
+    final double[] modifiedTargets = dataAdjusterService.modifiedTargets;
+    final double[] fixedEnergyValue = dataAdjusterService.fixedEnergyValue;
     MPSolver solver = MPSolver.createSolver("CBC");
     if (solver == null) {
       System.err.println("Solverを生成できません。");
@@ -72,22 +69,45 @@ public class testIntegerLP {
     }
     int vegNum = prices.length;
     int nutNum = modifiedTargets.length;
-    //変数を定義する    x[]:食材iの数量     0~(1食分の目安量の2倍まで)
+
+    /*
+    //変数を定義する    x[]:食材iの数量     0~(1食分の目安量の3倍まで)        ←    連続な値
     MPVariable[] x = new MPVariable[vegNum];
     for (int i = 0; i < vegNum; i++) {
-      x[i] = solver.makeIntVar(0.0, Double.POSITIVE_INFINITY, "x_" + i);
+      x[i] = solver.makeIntVar(0.0, baseAmountOfCalc[i] * 3, "x_" + i);
     }
+      */
+
+    //変数を定義する    x[]:食材iの数量     (1食分の目安量の0.5 ~ 3倍まで、または0)        ←    非連続な値、バイナリ変数を用いて表現
+    MPVariable[] x = new MPVariable[vegNum];        //主変数
+    MPVariable[] y = new MPVariable[vegNum];        //補助バイナリ変数(0 or 1)
+    for (int i = 0; i < vegNum; i++) {
+      x[i] = solver.makeIntVar(0, baseAmountOfCalc[i] * 3, "x_" + i);
+      y[i] = solver.makeIntVar(0, 1, "y_" + i);
+      double minVol = baseAmountOfCalc[i] * 0.5;
+      double maxVol = baseAmountOfCalc[i] * 3;
+      // 制約1: x[i] >= minVol * y[i]     (x[i]は1食分の目安量の0.5倍より多い)
+      MPConstraint c1 = solver.makeConstraint(0, Double.POSITIVE_INFINITY);
+      c1.setCoefficient(x[i], 1);
+      c1.setCoefficient(y[i], - minVol);
+      // 制約2: x[i] <= maxVol * y[i]       (〃3倍より小さい)
+      MPConstraint c2 = solver.makeConstraint(Double.NEGATIVE_INFINITY, 0);
+      c2.setCoefficient(x[i], 1);
+      c2.setCoefficient(y[i], - maxVol);
+    }
+
     // 栄養素目標の制約    sum_i (vegetable[i][j] * x[i]) >= targets[j]
     for (int j = 0; j < nutNum; j++) {
-      //栄養素jの目標値を設定
+      //栄養素jの目標値を設定  (右辺)
       MPConstraint constraint = solver.makeConstraint(modifiedTargets[j], Double.POSITIVE_INFINITY, "nutrient_" + j);
       for (int i = 0; i < vegNum; i++) {
-        //食材iに含まれる量を係数とする
+        //食材iに含まれる量を係数とする  (左辺)
         constraint.setCoefficient(x[i], vegetable[i][j]);
       }
     }
-    //カロリーバランスの制約
-    MPConstraint proteinLower = solver.makeConstraint(-fixedEnergyValue[0], Double.POSITIVE_INFINITY, "protein_lower");
+
+    //カロリーバランスの制約    sum_i (pi - 0.13ti) * x[i] >= - (P - 0.13T) : proteinLower の例
+    MPConstraint proteinLower = solver.makeConstraint(-fixedEnergyValue[0], Double.POSITIVE_INFINITY, "protein_lower"); //(右辺)
     MPConstraint proteinUpper = solver.makeConstraint(Double.NEGATIVE_INFINITY, -fixedEnergyValue[1], "protein_upper");
     MPConstraint fatLower = solver.makeConstraint(-fixedEnergyValue[2], Double.POSITIVE_INFINITY, "fat_lower");
     MPConstraint fatUpper = solver.makeConstraint(Double.NEGATIVE_INFINITY, -fixedEnergyValue[3], "fat_upper");
@@ -96,7 +116,7 @@ public class testIntegerLP {
     int lastRowNum = vegetable[0].length - 1; //"ci-0.65ti"の列番号  (0-indexed)
     for (int i = 0; i < vegNum; i++) {
       //食材iに含まれる量を係数とする
-      proteinLower.setCoefficient(x[i], vegetable[i][lastRowNum - 5]);
+      proteinLower.setCoefficient(x[i], vegetable[i][lastRowNum - 5]);  //(左辺)
       proteinUpper.setCoefficient(x[i], vegetable[i][lastRowNum - 4]);
       fatLower.setCoefficient(x[i], vegetable[i][lastRowNum - 3]);
       fatUpper.setCoefficient(x[i], vegetable[i][lastRowNum - 2]);
@@ -104,12 +124,14 @@ public class testIntegerLP {
       carbohydrateUpper.setCoefficient(x[i], vegetable[i][lastRowNum]);
     }
     //System.out.println("制約の本数は = " + solver.numConstraints());
+
     //目的関数（価格の総和を最小化）
     MPObjective objective = solver.objective();
     for (int i = 0; i < vegNum; i++) {
       objective.setCoefficient(x[i], prices[i]);
     }
     objective.setMinimization();
+    
     // 解く
     MPSolver.ResultStatus resultStatus = solver.solve();
     //System.out.println(solver.wallTime() + "ミリ秒で解かれました");
@@ -130,11 +152,11 @@ public class testIntegerLP {
 
   // --- 実現値を確認する --- 
   public static double[] checkRealize(int[] result, DataAdjusterService dataAdjusterService, int stapleIndex, int proteinIndex){
-    double[] modifiedTargets = dataAdjusterService.modifiedTargets;
-    double[][] stapleAndProtein = DataAdjusterService.stapleAndProtein;
-    int[] staVolOfsAndP = DataAdjusterService.staVolOfsAndP;
-    double[][] vegetable = DataAdjusterService.vegetable;
-    double[] realize = new double[modifiedTargets.length];
+    final double[] modifiedTargets = dataAdjusterService.modifiedTargets;
+    final double[][] stapleAndProtein = DataAdjusterService.stapleAndProtein;
+    final double[] staVolOfsAndP = DataAdjusterService.staVolOfsAndP;
+    final double[][] vegetable = DataAdjusterService.vegetable;
+    final double[] realize = new double[modifiedTargets.length];
     int pCalColNum = (stapleAndProtein[0].length - 1) - 9;  //"タンパク質のエネルギー"の列番号
     int fCalColNum = pCalColNum + 1;
     int cCalColNum = pCalColNum + 2;
@@ -169,7 +191,7 @@ public class testIntegerLP {
 
   // --- 合計価格の計算 --- 
   public static double getTotalPrice(double[] result){
-    double[] prices = DataAdjusterService.prices;
+    final double[] prices = DataAdjusterService.prices;
     double totalPrice = 0;
     for(int i=0; i<result.length; i++){
       totalPrice += result[i] * prices[i];
@@ -180,8 +202,8 @@ public class testIntegerLP {
 
   // --- resultを分かりやすく表示 --- 
   private static Map<String, String> formatResult(int[] result){
-    String[] vegIng = DataAdjusterService.vegIng;
-    int[] unitQuantity = DataAdjusterService.unitQuantity;
+    final String[] vegIng = DataAdjusterService.vegIng;
+    final int[] unitQuantity = DataAdjusterService.unitQuantity;
     LinkedHashMap<String, String> formatResult = new LinkedHashMap<>();
     for(int i=0; i<result.length; i++){
       if(result[i] != 0){
