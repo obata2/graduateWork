@@ -6,7 +6,8 @@ import java.util.Optional;
 import java.util.Arrays;
 
 import com.gwork.demo.Service.DataAdjusterService;
-
+import com.gwork.demo.Service.JsonProcesserService;
+import com.gwork.demo.Service.NutrientService;
 import com.google.ortools.init.OrToolsVersion;
 import com.google.ortools.linearsolver.MPConstraint;
 import com.google.ortools.linearsolver.MPObjective;
@@ -32,24 +33,34 @@ public class testIntegerLP {
 
     System.out.println("Google OR-Tools version: " + OrToolsVersion.getVersionString());
 
+    
     //解いてみる
     for(int stapleIndex=0; stapleIndex<4; stapleIndex++){
       for(int proteinIndex=4; proteinIndex<stapleAndProtein.length; proteinIndex++){
         System.out.println("-------------------------------------------------------------");
         System.out.println(spIng[stapleIndex] + " " + staVolOfsAndP[stapleIndex] + "g , " + spIng[proteinIndex] + " " + staVolOfsAndP[proteinIndex] + "g で計算");
         DataAdjusterService dataAdjusterService = new DataAdjusterService(stapleIndex, proteinIndex);
-        Optional<int []> resultOpt = solveILP(dataAdjusterService);
-        if(!resultOpt.isPresent()){   //計算不可ならばスキップ
+        Optional<int []> calcResultOpt = solveILP(dataAdjusterService);
+        if(!calcResultOpt.isPresent()){   //計算不可ならばスキップ
           System.out.println(spIng[stapleIndex] + " , " + spIng[proteinIndex] + " -> 計算不可能です");
           return;
         }
-        int[] result = resultOpt.get();
-        System.out.println(formatResult(result));
-        double[] realize = checkRealize(result, dataAdjusterService, stapleIndex, proteinIndex);
-        break;
+        int[] calcResult = calcResultOpt.get();
+        System.out.println(formatResult(calcResult));
+        double[] realizedNutrients = checkRealize(calcResult, dataAdjusterService, stapleIndex, proteinIndex);
+        //break;
       }
       break;
     }
+      
+    /*
+    JsonProcesserService jsonProcesserService = new JsonProcesserService();
+    DataAdjusterService dataAdjusterService = new DataAdjusterService(0,4);
+    NutrientService nutrientService = new NutrientService();
+    //System.out.println(jsonProcesserService.getIngAndPri());
+    //System.out.println(nutrientService.getPriceUnit());
+    //System.out.println(Arrays.toString(DataAdjusterService.prices));
+    */
     System.out.println((System.currentTimeMillis() - startTime) + "ミリ秒で処理完了");
   }
 
@@ -58,8 +69,8 @@ public class testIntegerLP {
   public static Optional<int []> solveILP(DataAdjusterService dataAdjusterService) {
     final double[] prices = DataAdjusterService.prices;
     final double[][] vegetable = DataAdjusterService.vegetable;
-    final double[] baseAmountOfCalc = DataAdjusterService.baseAmountOfCalc;
-    System.out.println(Arrays.toString(baseAmountOfCalc));
+    final double[] staVolOfVeg = DataAdjusterService.staVolOfVeg;
+    System.out.println(Arrays.toString(staVolOfVeg));
     final double[] modifiedTargets = dataAdjusterService.modifiedTargets;
     final double[] fixedEnergyValue = dataAdjusterService.fixedEnergyValue;
     MPSolver solver = MPSolver.createSolver("CBC");
@@ -74,18 +85,18 @@ public class testIntegerLP {
     //変数を定義する    x[]:食材iの数量     0~(1食分の目安量の3倍まで)        ←    連続な値
     MPVariable[] x = new MPVariable[vegNum];
     for (int i = 0; i < vegNum; i++) {
-      x[i] = solver.makeIntVar(0.0, baseAmountOfCalc[i] * 3, "x_" + i);
+      x[i] = solver.makeIntVar(0.0, staVolOfVeg[i] * 3, "x_" + i);
     }
       */
 
-    //変数を定義する    x[]:食材iの数量     (1食分の目安量の0.5 ~ 3倍まで、または0)        ←    非連続な値、バイナリ変数を用いて表現
+    //変数を定義する    x[]:食材iの数量     (0  または  1食分の目安量の0.5 ~ 3倍)        ←    非連続な値、バイナリ変数を用いて表現
     MPVariable[] x = new MPVariable[vegNum];        //主変数
     MPVariable[] y = new MPVariable[vegNum];        //補助バイナリ変数(0 or 1)
     for (int i = 0; i < vegNum; i++) {
-      x[i] = solver.makeIntVar(0, baseAmountOfCalc[i] * 3, "x_" + i);
+      x[i] = solver.makeIntVar(0, staVolOfVeg[i] * 3, "x_" + i);
       y[i] = solver.makeIntVar(0, 1, "y_" + i);
-      double minVol = baseAmountOfCalc[i] * 0.5;
-      double maxVol = baseAmountOfCalc[i] * 3;
+      double minVol = staVolOfVeg[i] * 0.5;
+      double maxVol = staVolOfVeg[i] * 3;
       // 制約1: x[i] >= minVol * y[i]     (x[i]は1食分の目安量の0.5倍より多い)
       MPConstraint c1 = solver.makeConstraint(0, Double.POSITIVE_INFINITY);
       c1.setCoefficient(x[i], 1);
@@ -131,7 +142,7 @@ public class testIntegerLP {
       objective.setCoefficient(x[i], prices[i]);
     }
     objective.setMinimization();
-    
+
     // 解く
     MPSolver.ResultStatus resultStatus = solver.solve();
     //System.out.println(solver.wallTime() + "ミリ秒で解かれました");

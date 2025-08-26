@@ -1,0 +1,204 @@
+<script setup lang="ts">
+import { ref } from 'vue'
+
+const activeTab = ref('data')
+const ingredients = [
+  { name: 'うるち米(単一原料米,「コシヒカリ」)', amount: '200g' },
+  { name: '牛肉(かた)', amount: '100g' },
+  { name: '牛乳(店頭売り,紙容器入り)', amount: '100g' },
+  { name: '鶏卵', amount: '60g' },
+  { name: 'キャベツ', amount: '160g' },
+  { name: 'もやし', amount: '70g' },
+  { name: 'さつまいも', amount: '70g' },
+  { name: 'にんじん', amount: '30g' },
+  { name: 'えのきたけ', amount: '50g' }
+]
+</script>
+
+<template>
+  <div class="min-h-screen bg-surface flex justify-center p-2 sm:p-4 md:p-8">
+    <!-- Mobile App Container -->
+    <div class="w-full max-w-sm sm:max-w-md bg-surface relative overflow-hidden">
+      <!-- Device Frame Border -->
+      <div class="absolute inset-0 border-8 border-outline-variant rounded-18 pointer-events-none"></div>
+      
+      <!-- Status Bar -->
+      <div class="flex justify-between items-end px-6 pt-3 pb-2 h-13">
+        <span class="text-label-large font-medium text-on-surface">9:30</span>
+        <div class="flex items-center gap-3">
+          <!-- Signal icons -->
+          <div class="w-6 h-6 bg-on-surface opacity-10 rounded-full"></div>
+          <div class="w-4 h-4 bg-on-surface opacity-30 rounded-sm"></div>
+          <div class="w-6 h-6 bg-on-surface rounded-full"></div>
+        </div>
+      </div>
+
+      <!-- App Bar Header -->
+      <div class="flex justify-between items-center px-1 py-2 h-16">
+        <!-- Menu Icon -->
+        <div class="w-12 h-12 flex items-center justify-center">
+          <svg class="w-6 h-6" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M3 18V16H21V18H3ZM3 13V11H21V13H3ZM3 8V6H21V8H3Z"/>
+          </svg>
+        </div>
+        
+        <!-- Title -->
+        <h1 class="text-title-large font-normal text-on-surface">Label</h1>
+        
+        <!-- Avatar -->
+        <div class="w-12 h-12 flex items-center justify-center">
+          <img 
+            src="https://api.builder.io/api/v1/image/assets/TEMP/849e9775b6cf6659b078e47bd7d630a33f4a3502?width=64" 
+            alt="User avatar"
+            class="w-8 h-8 rounded-full"
+          />
+        </div>
+      </div>
+
+      <!-- Main Content Area -->
+      <div class="px-4 sm:px-5 pt-4 pb-20">
+        <!-- Character Illustration -->
+        <div class="mb-6 sm:mb-8">
+          <img
+            src="https://api.builder.io/api/v1/image/assets/TEMP/27abdae8eff719dd46b7fac02a7f841726c1e352?width=244"
+            alt="Character illustration"
+            class="w-28 h-40 sm:w-30 sm:h-45 object-contain"
+          />
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="flex flex-col sm:flex-row gap-2 sm:justify-between mb-6">
+          <button class="flex items-center justify-center gap-1 px-3 py-2 rounded-xl min-h-[44px]">
+            <svg class="w-5 h-5 text-primary flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
+              <path d="M5.83335 16.6667L1.66669 12.5L5.83335 8.33334L7.00002 9.52084L4.85419 11.6667H10.8334V13.3333H4.85419L7.00002 15.4792L5.83335 16.6667ZM14.1667 11.6667L13 10.4792L15.1459 8.33334H9.16669V6.66668H15.1459L13 4.52084L14.1667 3.33334L18.3334 7.50001L14.1667 11.6667Z"/>
+            </svg>
+            <span class="text-label-large font-medium text-primary">並び替え</span>
+          </button>
+
+          <button class="flex items-center justify-center gap-1 px-3 py-2 rounded-xl min-h-[44px]">
+            <svg class="w-5 h-5 text-primary flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
+              <path d="M7.70833 18.3333L7.375 15.6667C7.19444 15.5972 7.02431 15.5139 6.86458 15.4167C6.70486 15.3194 6.54861 15.2153 6.39583 15.1042L3.91667 16.1458L1.625 12.1875L3.77083 10.5625C3.75694 10.4653 3.75 10.3715 3.75 10.2812V9.71874C3.75 9.62846 3.75694 9.53471 3.77083 9.43749L1.625 7.81249L3.91667 3.85416L6.39583 4.89582C6.54861 4.78471 6.70833 4.68055 6.875 4.58332C7.04167 4.4861 7.20833 4.40277 7.375 4.33332L7.70833 1.66666H12.2917L12.625 4.33332C12.8056 4.40277 12.9757 4.4861 13.1354 4.58332C13.2951 4.68055 13.4514 4.78471 13.6042 4.89582L16.0833 3.85416L18.375 7.81249L16.2292 9.43749C16.2431 9.53471 16.25 9.62846 16.25 9.71874V10.2812C16.25 10.3715 16.2361 10.4653 16.2083 10.5625L18.3542 12.1875L16.0625 16.1458L13.6042 15.1042C13.4514 15.2153 13.2917 15.3194 13.125 15.4167C12.9583 15.5139 12.7917 15.5972 12.625 15.6667L12.2917 18.3333H7.70833ZM9.16667 16.6667H10.8125L11.1042 14.4583C11.5347 14.3472 11.934 14.184 12.3021 13.9687C12.6701 13.7535 13.0069 13.493 13.3125 13.1875L15.375 14.0417L16.1875 12.625L14.3958 11.2708C14.4653 11.0764 14.5139 10.8715 14.5417 10.6562C14.5694 10.441 14.5833 10.2222 14.5833 9.99999C14.5833 9.77777 14.5694 9.55902 14.5417 9.34374C14.5139 9.12846 14.4653 8.9236 14.3958 8.72916L16.1875 7.37499L15.375 5.95832L13.3125 6.83332C13.0069 6.51388 12.6701 6.24652 12.3021 6.03124C11.934 5.81596 11.5347 5.65277 11.1042 5.54166L10.8333 3.33332H9.1875L8.89583 5.54166C8.46528 5.65277 8.06597 5.81596 7.69792 6.03124C7.32986 6.24652 6.99306 6.50693 6.6875 6.81249L4.625 5.95832L3.8125 7.37499L5.60417 8.70832C5.53472 8.91666 5.48611 9.12499 5.45833 9.33332C5.43056 9.54166 5.41667 9.76388 5.41667 9.99999C5.41667 10.2222 5.43056 10.4375 5.45833 10.6458C5.48611 10.8542 5.53472 11.0625 5.60417 11.2708L3.8125 12.625L4.625 14.0417L6.6875 13.1667C6.99306 13.4861 7.32986 13.7535 7.69792 13.9687C8.06597 14.184 8.46528 14.3472 8.89583 14.4583L9.16667 16.6667ZM10.0417 12.9167C10.8472 12.9167 11.5347 12.6319 12.1042 12.0625C12.6736 11.493 12.9583 10.8055 12.9583 9.99999C12.9583 9.19443 12.6736 8.50693 12.1042 7.93749C11.5347 7.36805 10.8472 7.08332 10.0417 7.08332C9.22222 7.08332 8.53125 7.36805 7.96875 7.93749C7.40625 8.50693 7.125 9.19443 7.125 9.99999C7.125 10.8055 7.40625 11.493 7.96875 12.0625C8.53125 12.6319 9.22222 12.9167 10.0417 12.9167Z"/>
+            </svg>
+            <span class="text-label-large font-medium text-primary whitespace-nowrap">オプションを変更</span>
+          </button>
+        </div>
+
+        <!-- Recipe Calculation Card -->
+        <div class="relative mb-6">
+          <!-- Gradient Background -->
+          <div class="absolute inset-0 bg-gradient-to-l from-gradient-start to-gradient-end rounded-xl shadow-elevation-1"></div>
+          
+          <!-- White Content Card -->
+          <div class="relative m-2 bg-surface rounded-xl p-4 sm:p-6">
+            <!-- Summary Section -->
+            <div class="mb-4">
+              <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 mb-1">
+                <div class="flex items-center gap-2">
+                  <span class="text-label-large font-medium text-on-surface">合計金額：</span>
+                  <span class="text-title-medium font-medium text-on-surface">○○○円</span>
+                </div>
+                <div class="flex items-center gap-2">
+                  <span class="text-label-large font-medium text-on-surface">総カロリー：</span>
+                  <span class="text-title-medium font-medium text-on-surface">○○○kcal</span>
+                </div>
+              </div>
+              <div class="h-px bg-gray-300 my-3"></div>
+              <p class="text-label-small text-on-surface-variant">※食材のみの目安金額、生の状態での合計カロリーです</p>
+            </div>
+
+            <!-- Ingredients Section -->
+            <div class="mb-6">
+              <div class="flex items-center gap-2 mb-4">
+                <svg class="w-4.5 h-5 text-on-surface" viewBox="0 0 18 20" fill="currentColor">
+                  <path d="M5.25 7.41428V5.78571H15.75V7.41428H5.25ZM5.25 10.6714V9.04285H15.75V10.6714H5.25ZM5.25 13.9286V12.3H15.75V13.9286H5.25ZM3 7.41428C2.7875 7.41428 2.60938 7.33624 2.46562 7.18017C2.32187 7.0241 2.25 6.83071 2.25 6.59999C2.25 6.36928 2.32187 6.17588 2.46562 6.01981C2.60938 5.86374 2.7875 5.78571 3 5.78571C3.2125 5.78571 3.39062 5.86374 3.53437 6.01981C3.67813 6.17588 3.75 6.36928 3.75 6.59999C3.75 6.83071 3.67813 7.0241 3.53437 7.18017C3.39062 7.33624 3.2125 7.41428 3 7.41428ZM3 10.6714C2.7875 10.6714 2.60938 10.5934 2.46562 10.4373C2.32187 10.2812 2.25 10.0878 2.25 9.85713C2.25 9.62642 2.32187 9.43303 2.46562 9.27696C2.60938 9.12088 2.7875 9.04285 3 9.04285C3.2125 9.04285 3.39062 9.12088 3.53437 9.27696C3.67813 9.43303 3.75 9.62642 3.75 9.85713C3.75 10.0878 3.67813 10.2812 3.53437 10.4373C3.39062 10.5934 3.2125 10.6714 3 10.6714ZM3 13.9286C2.7875 13.9286 2.60938 13.8505 2.46562 13.6945C2.32187 13.5384 2.25 13.345 2.25 13.1143C2.25 12.8836 2.32187 12.6902 2.46562 12.5341C2.60938 12.378 2.7875 12.3 3 12.3C3.2125 12.3 3.39062 12.378 3.53437 12.5341C3.67813 12.6902 3.75 12.8836 3.75 13.1143C3.75 13.345 3.67813 13.5384 3.53437 13.6945C3.39062 13.8505 3.2125 13.9286 3 13.9286Z"/>
+                </svg>
+                <span class="text-label-large font-medium text-on-surface">食材</span>
+              </div>
+              
+              <!-- Ingredients List -->
+              <div class="space-y-1.5 text-label-large text-on-surface leading-5">
+                <div v-for="ingredient in ingredients" :key="ingredient.name" class="flex justify-between items-start gap-4">
+                  <span class="flex-1 break-words">{{ ingredient.name }}</span>
+                  <span class="font-medium flex-shrink-0">{{ ingredient.amount }}</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Pagination -->
+            <div class="flex justify-between items-center">
+              <span class="text-label-large font-medium text-on-surface">1/80</span>
+              <svg class="w-9 h-9 text-primary" viewBox="0 0 38 38" fill="none" stroke="currentColor">
+                <path d="M28.5 31.6666V15.8333M19 31.6666V6.33331M9.5 31.6666V22.1666" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <!-- Generate Recipe Button -->
+        <div class="flex justify-center">
+          <button class="w-full sm:w-auto px-6 py-4 bg-inverse-on-surface text-primary text-title-medium font-medium rounded-2xl shadow-elevation-1 min-h-[56px] transition-all duration-200 hover:shadow-lg active:scale-95">
+            レシピを生成する
+          </button>
+        </div>
+      </div>
+
+      <!-- Bottom Navigation -->
+      <div class="absolute bottom-0 left-0 right-0 bg-surface border-t border-outline-variant">
+        <div class="flex justify-center items-center h-16 sm:h-18">
+          <!-- Data Tab -->
+          <button
+            :class="['flex flex-col items-center gap-1 px-2 sm:px-4 py-1.5 flex-1 min-h-[48px]', activeTab === 'data' ? 'text-secondary' : 'text-on-surface-variant']"
+            @click="activeTab = 'data'"
+          >
+            <div :class="['flex items-center justify-center w-14 h-8 rounded-2xl transition-colors duration-200', activeTab === 'data' ? 'bg-secondary-container' : '']">
+              <svg class="w-6 h-6" viewBox="0 0 25 24" fill="currentColor">
+                <path d="M8.66669 18L12.6667 14.95L16.6667 18L15.1667 13.05L19.1667 10.2H14.2667L12.6667 5L11.0667 10.2H6.16669L10.1667 13.05L8.66669 18ZM12.6667 22C11.2834 22 9.98335 21.7375 8.76669 21.2125C7.55002 20.6875 6.49169 19.975 5.59169 19.075C4.69169 18.175 3.97919 17.1167 3.45419 15.9C2.92919 14.6833 2.66669 13.3833 2.66669 12C2.66669 10.6167 2.92919 9.31667 3.45419 8.1C3.97919 6.88333 4.69169 5.825 5.59169 4.925C6.49169 4.025 7.55002 3.3125 8.76669 2.7875C9.98335 2.2625 11.2834 2 12.6667 2C14.05 2 15.35 2.2625 16.5667 2.7875C17.7834 3.3125 18.8417 4.025 19.7417 4.925C20.6417 5.825 21.3542 6.88333 21.8792 8.1C22.4042 9.31667 22.6667 10.6167 22.6667 12C22.6667 13.3833 22.4042 14.6833 21.8792 15.9C21.3542 17.1167 20.6417 18.175 19.7417 19.075C18.8417 19.975 17.7834 20.6875 16.5667 21.2125C15.35 21.7375 14.05 22 12.6667 22Z"/>
+              </svg>
+            </div>
+            <span class="text-label-medium font-medium">データ</span>
+          </button>
+
+          <!-- Calculate Tab -->
+          <button
+            :class="['flex flex-col items-center gap-1 px-2 sm:px-4 py-1.5 flex-1 min-h-[48px]', activeTab === 'calculate' ? 'text-secondary' : 'text-on-surface-variant']"
+            @click="activeTab = 'calculate'"
+          >
+            <div :class="['flex items-center justify-center w-14 h-8 rounded-2xl transition-colors duration-200', activeTab === 'calculate' ? 'bg-secondary-container' : '']">
+              <svg class="w-6 h-6" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M8.00006 18L12.0001 14.95L16.0001 18L14.5001 13.05L18.5001 10.2H13.6001L12.0001 5L10.4001 10.2H5.50006L9.50006 13.05L8.00006 18ZM12.0001 22C10.6167 22 9.31673 21.7375 8.10006 21.2125C6.88339 20.6875 5.82506 19.975 4.92506 19.075C4.02506 18.175 3.31256 17.1167 2.78756 15.9C2.26256 14.6833 2.00006 13.3833 2.00006 12C2.00006 10.6167 2.26256 9.31667 2.78756 8.1C3.31256 6.88333 4.02506 5.825 4.92506 4.925C5.82506 4.025 6.88339 3.3125 8.10006 2.7875C9.31673 2.2625 10.6167 2 12.0001 2C13.3834 2 14.6834 2.2625 15.9001 2.7875C17.1167 3.3125 18.1751 4.025 19.0751 4.925C19.9751 5.825 20.6876 6.88333 21.2126 8.1C21.7376 9.31667 22.0001 10.6167 22.0001 12C22.0001 13.3833 21.7376 14.6833 21.2126 15.9C20.6876 17.1167 19.9751 18.175 19.0751 19.075C18.1751 19.975 17.1167 20.6875 15.9001 21.2125C14.6834 21.7375 13.3834 22 12.0001 22ZM12.0001 20C14.2334 20 16.1251 19.225 17.6751 17.675C19.2251 16.125 20.0001 14.2333 20.0001 12C20.0001 9.76667 19.2251 7.875 17.6751 6.325C16.1251 4.775 14.2334 4 12.0001 4C9.76673 4 7.87506 4.775 6.32506 6.325C4.77506 7.875 4.00006 9.76667 4.00006 12C4.00006 14.2333 4.77506 16.125 6.32506 17.675C7.87506 19.225 9.76673 20 12.0001 20Z"/>
+              </svg>
+            </div>
+            <span class="text-label-medium font-medium">計算</span>
+          </button>
+
+          <!-- History Tab -->
+          <button
+            :class="['flex flex-col items-center gap-1 px-2 sm:px-4 py-1.5 flex-1 min-h-[48px]', activeTab === 'history' ? 'text-secondary' : 'text-on-surface-variant']"
+            @click="activeTab = 'history'"
+          >
+            <div :class="['flex items-center justify-center w-14 h-8 rounded-2xl transition-colors duration-200', activeTab === 'history' ? 'bg-secondary-container' : '']">
+              <svg class="w-6 h-6" viewBox="0 0 25 24" fill="currentColor">
+                <path d="M8.33337 18L12.3334 14.95L16.3334 18L14.8334 13.05L18.8334 10.2H13.9334L12.3334 5L10.7334 10.2H5.83337L9.83337 13.05L8.33337 18ZM12.3334 22C10.95 22 9.65004 21.7375 8.43337 21.2125C7.21671 20.6875 6.15837 19.975 5.25837 19.075C4.35837 18.175 3.64587 17.1167 3.12087 15.9C2.59587 14.6833 2.33337 13.3833 2.33337 12C2.33337 10.6167 2.59587 9.31667 3.12087 8.1C3.64587 6.88333 4.35837 5.825 5.25837 4.925C6.15837 4.025 7.21671 3.3125 8.43337 2.7875C9.65004 2.2625 10.95 2 12.3334 2C13.7167 2 15.0167 2.2625 16.2334 2.7875C17.45 3.3125 18.5084 4.025 19.4084 4.925C20.3084 5.825 21.0209 6.88333 21.5459 8.1C22.0709 9.31667 22.3334 10.6167 22.3334 12C22.3334 13.3833 22.0709 14.6833 21.5459 15.9C21.0209 17.1167 20.3084 18.175 19.4084 19.075C18.5084 19.975 17.45 20.6875 16.2334 21.2125C15.0167 21.7375 13.7167 22 12.3334 22ZM12.3334 20C14.5667 20 16.4584 19.225 18.0084 17.675C19.5584 16.125 20.3334 14.2333 20.3334 12C20.3334 9.76667 19.5584 7.875 18.0084 6.325C16.4584 4.775 14.5667 4 12.3334 4C10.1 4 8.20837 4.775 6.65837 6.325C5.10837 7.875 4.33337 9.76667 4.33337 12C4.33337 14.2333 5.10837 16.125 6.65837 17.675C8.20837 19.225 10.1 20 12.3334 20Z"/>
+              </svg>
+            </div>
+            <span class="text-label-medium font-medium">履歴</span>
+          </button>
+        </div>
+        
+        <!-- Home Indicator -->
+        <div class="flex justify-center pb-2">
+          <div class="w-27 h-1 bg-on-surface rounded-3xl"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<style scoped>
+/* Custom font import */
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display=swap');
+
+body {
+  font-family: 'Roboto', system-ui, sans-serif;
+}
+</style>

@@ -12,7 +12,7 @@ public class DataAdjusterService {
   public static double[][] stapleAndProtein;
   public static double[][] vegetable;
   public static double[] staVolOfsAndP;
-  public static double[] baseAmountOfCalc;
+  public static double[] staVolOfVeg;
   public static double[] prices;
   public static String[] vegIng = {"牛乳(店頭売り,紙容器入り)","チーズ(国産品)","チーズ(輸入品)","ヨーグルト","鶏卵","キャベツ","ほうれんそう","はくさい","ねぎ","レタス","もやし","ブロッコリー","アスパラガス","さつまいも","じゃがいも","さといも","だいこん","にんじん","ごぼう","たまねぎ","れんこん","ながいも","えだまめ","さやいんげん","かぼちゃ","きゅうり","なす","トマト","ピーマン","生しいたけ","えのきたけ","しめじ","わかめ","ひじき","豆腐","油揚げ","納豆","こんにゃく"};
   public static int[] unitQuantity;
@@ -21,7 +21,7 @@ public class DataAdjusterService {
   private static JsonProcesserService jsonProcesserService = new JsonProcesserService();
   private static  NutrientService nutrientService = new NutrientService();
   private static Map<String, Integer> specific = Map.of(      //excel上の目安量よりもこちらの方が優先される
-    "牛乳(店頭売り,紙容器入り)", 200,
+    "牛乳(店頭売り,紙容器入り)", 100,
     "鶏卵", 60,
     "豆腐", 100,
     "納豆", 40
@@ -29,18 +29,19 @@ public class DataAdjusterService {
   private static Map<String, Double> priceUnit = nutrientService.getPriceUnit();
   private static Map<String, Integer> ingAndPri = jsonProcesserService.getIngAndPri();
   private static double[] targets = nutrientService.getTargets();
-  private static double[] staVolOfVeg = nutrientService.getStaVolOfVeg();
 
   static {
     unitQuantity = getUnitQuantity(vegIng, specific);
-    System.out.println("unitQuantity : " + Arrays.toString(unitQuantity));
+    //System.out.println("unitQuantity : " + Arrays.toString(unitQuantity));
     stapleAndProtein = nutrientService.getStapleAndProtein();
     vegetable = modifyVegNutrients(nutrientService.getVegetable(), unitQuantity);
     staVolOfsAndP = nutrientService.getStaVolOfsAndP();
-    baseAmountOfCalc = getBaseAmountOfCalc(unitQuantity, staVolOfVeg, vegIng, specific);
-    System.out.println("staVolOfVeg : " + Arrays.toString(staVolOfVeg));
-    System.out.println("modifiedStaVolOfVeg : " + Arrays.toString(staVolOfVeg));
+    staVolOfVeg = getStaVolOfVeg(unitQuantity, nutrientService.getStaVolOfVeg(), vegIng, specific);
+    //System.out.println("staVolOfVeg : " + Arrays.toString(staVolOfVeg));
+    //System.out.println("staVolOfVeggetStaVolOfVeg : " + Arrays.toString(staVolOfVeggetStaVolOfVeg));
     prices = setPrices(priceUnit, ingAndPri, unitQuantity);
+
+    //getPriceRawArray(priceUnit, ingAndPri);
   }
 
   //状態に依存する変数  →  i,jを引数とするコンストラクタで、状態を保存する
@@ -121,7 +122,7 @@ public class DataAdjusterService {
 
 
   // --- 単位重量で目安量を修正 ---
-  private static double[] getBaseAmountOfCalc(int[] unitQuantity, double[] staVolOfVeg, String[] vegIng, Map<String, Integer> specific){
+  private static double[] getStaVolOfVeg(int[] unitQuantity, double[] staVolOfVeg, String[] vegIng, Map<String, Integer> specific){
     double[] modifiedStaVolOfVeg = new double[staVolOfVeg.length];
     for(int i=0; i<staVolOfVeg.length; i++){
       if(specific.containsKey(vegIng[i])){
@@ -131,5 +132,18 @@ public class DataAdjusterService {
       }
     }
     return modifiedStaVolOfVeg;
+  }
+
+
+  //↓本筋とは関係ないメソッド
+  // --- 価格
+  private static void getPriceRawArray(Map<String, Double> priceUnit, Map<String, Integer> ingAndPri){
+    double[] priceRawArray = new double[priceUnit.size()];
+    int i=0;
+    for(String key : priceUnit.keySet()){
+      priceRawArray[i] = ingAndPri.get(key);
+      i++;
+    }
+    System.out.println("priceRawArray : " + Arrays.toString(priceRawArray));
   }
 }
