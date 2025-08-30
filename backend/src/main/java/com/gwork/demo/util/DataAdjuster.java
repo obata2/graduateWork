@@ -1,12 +1,15 @@
-package com.gwork.demo.Service;
+package com.gwork.demo.util;
 
 import java.util.Map;
 import java.util.Arrays;
 
 import org.springframework.stereotype.Service;
 
-@Service
-public class DataAdjusterService {
+import com.gwork.demo.Service.JsonProcesserService;
+import com.gwork.demo.Service.NutrientService;
+
+//ILPのために必要な、データの事前加工を行うクラス
+public class DataAdjuster {
 
   //ILPに用いる変数
   public static double[][] stapleAndProtein;
@@ -14,6 +17,7 @@ public class DataAdjusterService {
   public static double[] staVolOfsAndP;
   public static double[] staVolOfVeg;
   public static double[] prices;
+  public static String[] spIng ={"うるち米(単一原料米,「コシヒカリ」)","ゆでうどん","スパゲッティ","中華麺","牛肉(かた)","牛肉(かたロース)","牛肉(リブロース)","牛肉(サーロイン)","牛肉(ばら)","牛肉(もも)","牛肉(そともも)","牛肉(ランプ)","牛肉(ヒレ)","豚肉(かた)","豚肉(かたロース)","豚肉(ロース)","豚肉(ばら)","豚肉(もも)","豚肉(そともも)","豚肉(ヒレ)","鶏肉(手羽)","鶏肉(手羽さき)","鶏肉(手羽もと)","鶏肉(むね)","鶏肉(もも)","鶏肉(ささみ)","鶏肉(ひきにく)"};
   public static String[] vegIng = {"牛乳(店頭売り,紙容器入り)","チーズ(国産品)","チーズ(輸入品)","ヨーグルト","鶏卵","キャベツ","ほうれんそう","はくさい","ねぎ","レタス","もやし","ブロッコリー","アスパラガス","さつまいも","じゃがいも","さといも","だいこん","にんじん","ごぼう","たまねぎ","れんこん","ながいも","えだまめ","さやいんげん","かぼちゃ","きゅうり","なす","トマト","ピーマン","生しいたけ","えのきたけ","しめじ","わかめ","ひじき","豆腐","油揚げ","納豆","こんにゃく"};
   public static int[] unitQuantity;
 
@@ -50,7 +54,7 @@ public class DataAdjusterService {
 
 
   // --- コンストラクタ ---
-  public DataAdjusterService (int stapleIndex, int proteinIndex){
+  public DataAdjuster (int stapleIndex, int proteinIndex){
     this.modifiedTargets = modifyTargets(stapleIndex, proteinIndex);
     this.fixedEnergyValue = fixEnergy(stapleIndex, proteinIndex);
   }

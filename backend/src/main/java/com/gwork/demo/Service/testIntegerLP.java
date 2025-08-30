@@ -1,13 +1,13 @@
-package com.gwork.demo;
+package com.gwork.demo.Service;
 
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Arrays;
 
-import com.gwork.demo.Service.DataAdjusterService;
-import com.gwork.demo.Service.JsonProcesserService;
-import com.gwork.demo.Service.NutrientService;
+import com.gwork.demo.util.DataAdjuster;
+
 import com.google.ortools.init.OrToolsVersion;
 import com.google.ortools.linearsolver.MPConstraint;
 import com.google.ortools.linearsolver.MPObjective;
@@ -16,41 +16,55 @@ import com.google.ortools.linearsolver.MPVariable;
 
 public class testIntegerLP {
 
+  
   static {
+    /*
     String nativePath = "C:\\Users\\81809\\Desktop\\demo\\backend\\libs\\native";
     System.setProperty("java.library.path", nativePath);
     System.load(nativePath + "\\jniortools.dll");
+    */
+    String nativePath = "C:\\Users\\81809\\Desktop\\demo\\backend\\libs\\native\\jniortools.dll";
+    System.load(nativePath);
+    System.out.println("ロードできました");
   }
 
   public static void main(String args[]){
 
-    double[][] stapleAndProtein = DataAdjusterService.stapleAndProtein;
-    String[] spIng ={"うるち米(単一原料米,「コシヒカリ」)","ゆでうどん","スパゲッティ","中華麺","牛肉(かた)","牛肉(かたロース)","牛肉(リブロース)","牛肉(サーロイン)","牛肉(ばら)","牛肉(もも)","牛肉(そともも)","牛肉(ランプ)","牛肉(ヒレ)","豚肉(かた)","豚肉(かたロース)","豚肉(ロース)","豚肉(ばら)","豚肉(もも)","豚肉(そともも)","豚肉(ヒレ)","鶏肉(手羽)","鶏肉(手羽さき)","鶏肉(手羽もと)","鶏肉(むね)","鶏肉(もも)","鶏肉(ささみ)","鶏肉(ひきにく)"};
-    double[] staVolOfsAndP = DataAdjusterService.staVolOfsAndP;
+    double[][] stapleAndProtein = DataAdjuster.stapleAndProtein;
+    String[] spIng = DataAdjuster.spIng;
+    double[] staVolOfsAndP = DataAdjuster.staVolOfsAndP;
+    //List<CalcResultService> ;
 
     long startTime = System.currentTimeMillis(); // 開始時刻を記録
     long timeout = 6000; // 時間制限(ミリ秒)
 
-    System.out.println("Google OR-Tools version: " + OrToolsVersion.getVersionString());
+    //System.out.println("Google OR-Tools version: " + OrToolsVersion.getVersionString());
 
     
-    //解いてみる
+    //計算結果を得る
     for(int stapleIndex=0; stapleIndex<4; stapleIndex++){
       for(int proteinIndex=4; proteinIndex<stapleAndProtein.length; proteinIndex++){
+        int totalPrice;
+        int totalKcal;
+        int[] pfcKcal;
+        LinkedHashMap<String, String> ingredients;
+        LinkedHashMap<String, Integer> nutrients;
         System.out.println("-------------------------------------------------------------");
         System.out.println(spIng[stapleIndex] + " " + staVolOfsAndP[stapleIndex] + "g , " + spIng[proteinIndex] + " " + staVolOfsAndP[proteinIndex] + "g で計算");
-        DataAdjusterService dataAdjusterService = new DataAdjusterService(stapleIndex, proteinIndex);
-        Optional<int []> calcResultOpt = solveILP(dataAdjusterService);
-        if(!calcResultOpt.isPresent()){   //計算不可ならばスキップ
+        DataAdjuster dataAdjusterService = new DataAdjuster(stapleIndex, proteinIndex);   //ここで栄養素目標・カロリーバランスの固定値で補正が入る
+        Optional<int []> solutionOpt = solveILP(dataAdjusterService);   //解ベクトルしか返ってこない
+        if(!solutionOpt.isPresent()){   //計算不可ならばスキップ
           System.out.println(spIng[stapleIndex] + " , " + spIng[proteinIndex] + " -> 計算不可能です");
-          return;
+          break;
         }
-        int[] calcResult = calcResultOpt.get();
-        System.out.println(formatResult(calcResult));
-        double[] realizedNutrients = checkRealize(calcResult, dataAdjusterService, stapleIndex, proteinIndex);
-        //break;
+        int[] solution = solutionOpt.get();
+
+        //以下、解ベクトルを利用して CalcResult を整えていく
+        totalPrice = getTotalPrice(solution);
+        ingredients = formatSolution(solution);
+        System.out.println("合計金額：" + totalPrice + " , 計算結果：" + ingredients);
+        double[] realizedNutrients = checkRealize(solution, dataAdjusterService, stapleIndex, proteinIndex);    //カロリーと栄養についてはこのメソッドでひとまとめに
       }
-      break;
     }
       
     /*
@@ -66,11 +80,11 @@ public class testIntegerLP {
 
 
   // --- ILPで解く ---
-  public static Optional<int []> solveILP(DataAdjusterService dataAdjusterService) {
-    final double[] prices = DataAdjusterService.prices;
-    final double[][] vegetable = DataAdjusterService.vegetable;
-    final double[] staVolOfVeg = DataAdjusterService.staVolOfVeg;
-    System.out.println(Arrays.toString(staVolOfVeg));
+  public static Optional<int []> solveILP(DataAdjuster dataAdjusterService) {
+    final double[] prices = DataAdjuster.prices;
+    final double[][] vegetable = DataAdjuster.vegetable;
+    final double[] staVolOfVeg = DataAdjuster.staVolOfVeg;
+    //System.out.println(Arrays.toString(staVolOfVeg));
     final double[] modifiedTargets = dataAdjusterService.modifiedTargets;
     final double[] fixedEnergyValue = dataAdjusterService.fixedEnergyValue;
     MPSolver solver = MPSolver.createSolver("CBC");
@@ -146,7 +160,7 @@ public class testIntegerLP {
     // 解く
     MPSolver.ResultStatus resultStatus = solver.solve();
     //System.out.println(solver.wallTime() + "ミリ秒で解かれました");
-    if (resultStatus == MPSolver.ResultStatus.OPTIMAL || resultStatus == MPSolver.ResultStatus.FEASIBLE) {
+    if (resultStatus == MPSolver.ResultStatus.OPTIMAL || resultStatus == MPSolver.ResultStatus.FEASIBLE) {    //解が見つかった場合
       int[] solution = new int[vegNum];
       for (int i = 0; i < vegNum; i++) {
         solution[i] = (int) Math.round(x[i].solutionValue());
@@ -154,7 +168,7 @@ public class testIntegerLP {
       System.out.println("合計価格は " + objective.value() + "円");
       System.out.println("計算結果は" + Arrays.toString(solution));
       return Optional.of(solution);
-    } else {
+    } else {    //解が見つからなかった場合
       System.out.println("optimal solution が見つけられませんでした");
       return Optional.empty();
     }
@@ -162,11 +176,11 @@ public class testIntegerLP {
 
 
   // --- 実現値を確認する --- 
-  public static double[] checkRealize(int[] result, DataAdjusterService dataAdjusterService, int stapleIndex, int proteinIndex){
+  public static double[] checkRealize(int[] result, DataAdjuster dataAdjusterService, int stapleIndex, int proteinIndex){
     final double[] modifiedTargets = dataAdjusterService.modifiedTargets;
-    final double[][] stapleAndProtein = DataAdjusterService.stapleAndProtein;
-    final double[] staVolOfsAndP = DataAdjusterService.staVolOfsAndP;
-    final double[][] vegetable = DataAdjusterService.vegetable;
+    final double[][] stapleAndProtein = DataAdjuster.stapleAndProtein;
+    final double[] staVolOfsAndP = DataAdjuster.staVolOfsAndP;
+    final double[][] vegetable = DataAdjuster.vegetable;
     final double[] realize = new double[modifiedTargets.length];
     int pCalColNum = (stapleAndProtein[0].length - 1) - 9;  //"タンパク質のエネルギー"の列番号
     int fCalColNum = pCalColNum + 1;
@@ -201,27 +215,27 @@ public class testIntegerLP {
 
 
   // --- 合計価格の計算 --- 
-  public static double getTotalPrice(double[] result){
-    final double[] prices = DataAdjusterService.prices;
-    double totalPrice = 0;
-    for(int i=0; i<result.length; i++){
-      totalPrice += result[i] * prices[i];
+  public static int getTotalPrice(int[] solution){
+    final double[] prices = DataAdjuster.prices;
+    int totalPrice = 0;
+    for(int i=0; i<solution.length; i++){
+      totalPrice += (int) solution[i] * prices[i];
     }
     return totalPrice;
   }
 
 
-  // --- resultを分かりやすく表示 --- 
-  private static Map<String, String> formatResult(int[] result){
-    final String[] vegIng = DataAdjusterService.vegIng;
-    final int[] unitQuantity = DataAdjusterService.unitQuantity;
-    LinkedHashMap<String, String> formatResult = new LinkedHashMap<>();
-    for(int i=0; i<result.length; i++){
-      if(result[i] != 0){
-        formatResult.put(vegIng[i], (result[i] * unitQuantity[i]) + "g");
+  // --- solution を{材料名：グラム数}の辞書に変換 --- 
+  private static LinkedHashMap<String, String> formatSolution(int[] solution){
+    LinkedHashMap<String, String> formatSolution = new LinkedHashMap<>();
+    final String[] vegIng = DataAdjuster.vegIng;
+    final int[] unitQuantity = DataAdjuster.unitQuantity;
+    for(int i=0; i<solution.length; i++){
+      if(solution[i] != 0){
+        formatSolution.put(vegIng[i], (solution[i] * unitQuantity[i]) + "g");
       }
     }
-    return formatResult;
+    return formatSolution;
   }
 
 

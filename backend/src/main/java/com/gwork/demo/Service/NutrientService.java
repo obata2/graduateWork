@@ -30,7 +30,6 @@ public class NutrientService {
             this.workbook_veg = new XSSFWorkbook(fis_veg);
             FileInputStream fis_targets = new FileInputStream(new File(filePath_targets));
             this.workbook_targets = new XSSFWorkbook(fis_targets);
-            System.out.println("NUtrientServiceのインスタンスを生成、excelファイルを読み込みました");
         }catch(IOException e){
             System.out.println("NUtrientServiceのインスタンスを生成、excelファイルを読み込めません");
         }

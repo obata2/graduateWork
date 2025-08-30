@@ -54,7 +54,7 @@ public class JsonProcesserService {
 
     // --- データをCachedDataに書き込む --- 
     public void saveJSONToCache(JsonNode jsonNode) {
-        final String FILE_PATH = "C:\\Users\\81809\\Desktop\\demo\\backend\\CachedData.json";
+        final String FILE_PATH = "C:\\Users\\81809\\Desktop\\demo\\backend\\CachedPriceData.json";
         ObjectMapper mapper = new ObjectMapper();
         try {
             mapper.writeValue(new File(FILE_PATH), jsonNode);
@@ -66,7 +66,7 @@ public class JsonProcesserService {
 
     // --- CachedDataを読み込み、変数()を用意 --- 
     public void readJSONFromCache() {
-        final String FILE_PATH = "C:\\Users\\81809\\Desktop\\demo\\backend\\CachedData.json";
+        final String FILE_PATH = "C:\\Users\\81809\\Desktop\\demo\\backend\\CachedPriceData.json";
         Map<String, String> idAndIng = new LinkedHashMap<>();
         Map<String, Integer> idAndPri = new LinkedHashMap<>();
         Map<String, Integer> ingAndPri = new LinkedHashMap<>();
@@ -153,7 +153,7 @@ public class JsonProcesserService {
 
     //JSONの元データを確認
     public JsonNode checkJSON(){
-        final String FILE_PATH = "C:\\Users\\81809\\Desktop\\demo\\backend\\CachedData.json";
+        final String FILE_PATH = "C:\\Users\\81809\\Desktop\\demo\\backend\\CachedPriceData.json";
         try {
             ObjectMapper mapper = new ObjectMapper();
             JsonNode jsonNode = mapper.readTree(new File(FILE_PATH));   //ファイルからJsonNodeを読み込む(元データ)
