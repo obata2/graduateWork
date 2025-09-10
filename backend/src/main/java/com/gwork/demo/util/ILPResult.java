@@ -3,13 +3,15 @@ package com.gwork.demo.util;
 import java.util.LinkedHashMap;
 
 public class ILPResult {
+  public int id;
   public LinkedHashMap<String, String> ingredients;
   public int totalPrice;
   public int totalKcal;
   public int[] pfcKcal;
   public LinkedHashMap<String, Double> nutrients;
   public int[] solutionVector;
-  
+
+  public void setId(int id){ this.id = id; }
   public void setIngredients(LinkedHashMap<String, String> ingredients){ this.ingredients = ingredients; }
   public void setTotalPrice(int totalPrice){ this.totalPrice = totalPrice; }
   public void setTotalKcal(int totalKcal){ this.totalKcal = totalKcal; }

@@ -1,11 +1,15 @@
 package com.gwork.demo.Service;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.ortools.linearsolver.MPConstraint;
 import com.google.ortools.linearsolver.MPObjective;
 import com.google.ortools.linearsolver.MPSolver;
@@ -46,9 +50,12 @@ public class IntegerLinearService {
     long timeout = 6000; // 時間制限(ミリ秒)
     
     //計算結果を得る
+    int id = 1;
     for(int stapleIndex=0; stapleIndex<4; stapleIndex++){
       for(int proteinIndex=4; proteinIndex<stapleAndProtein.length; proteinIndex++){
         ILPResult result = new ILPResult();
+        result.setId(id);
+        id++;
         DataAdjuster dataAdjuster = new DataAdjuster(stapleIndex, proteinIndex);   //ここで栄養素目標・カロリーバランスの固定値で補正が入る
         result = solveILP(dataAdjuster, result);   // ** totalPrice, solutionVectorをセット **
         if(result.solutionVector == null){   //計算不可ならばスキップ
@@ -62,6 +69,7 @@ public class IntegerLinearService {
         ilpResultList.add(result);
       }
     }
+    saveResultToCache(ilpResultList);
     System.out.println((System.currentTimeMillis() - startTime) + "ミリ秒で処理完了");
     return ilpResultList;
   }
@@ -235,5 +243,17 @@ public class IntegerLinearService {
       }
     }
     return formatNutrients;
+  }
+
+
+  // --- 計算結果をjsonファイルに書き込む ---
+  public void saveResultToCache(ArrayList<ILPResult> ilpResultList) {
+    final String FILE_PATH = "C:\\Users\\81809\\Desktop\\demo\\frontend\\src\\assets\\cachedILPResult.json";
+    ObjectMapper mapper = new ObjectMapper();
+    try {
+        mapper.writeValue(new File(FILE_PATH), ilpResultList);
+    } catch (IOException e) {
+        e.printStackTrace();
+    }
   }
 }
