@@ -3,6 +3,7 @@ import { ref } from 'vue'
 import AppHeader from './components/AppHeader.vue'
 import AppFooter from './components/AppFooter.vue'
 import MealView from './views/MealView.vue'
+import HistoryView from './views/HistoryView.vue'
 
 const activeTab = ref('meal')  // ← 状態は親に持たせる
 </script>
@@ -16,7 +17,9 @@ const activeTab = ref('meal')  // ← 状態は親に持たせる
       <div v-else-if="activeTab === 'meal'">
         <MealView />
       </div>
-      <div v-else-if="activeTab === 'history'">履歴タブの表示中</div>
+      <div v-else-if="activeTab === 'history'">
+        <HistoryView/>
+      </div>
     </main>
     <AppFooter v-model="activeTab" />
   </div>

@@ -1,6 +1,47 @@
 <script setup>
-import ilpResultList from "C:\\Users\\81809\\Desktop\\demo\\frontend\\src\\assets\\cachedILPResult.json";
-const listSize = ilpResultList.length;
+import { ref, watch } from "vue";
+import axios from "axios";
+import ModalSquare from "C:\\Users\\81809\\Desktop\\demo\\frontend\\src\\components\\ModalSquare.vue";
+
+const selectedSort = ref("default"); // 初期のソート順: 標準
+const iLPResultList = ref([]);
+const listSize = ref(0);
+const loading = ref(false);
+// 初期読み込み
+const loadInitial = async () => {
+  const res = await axios.get(`http://localhost:50000/sort?sort=${selectedSort.value}`);
+  iLPResultList.value = res.data;
+  listSize.value = iLPResultList.value.length;
+};
+loadInitial();
+
+// 並び替え選択が変わったらAPI呼び出し
+watch(selectedSort, async (newSort) => {
+  closeModal();               //モーダルウィンドウを閉じて
+  loading.value = true;       //更新のアニメーションに移行
+  setTimeout(async () => {
+    const res = await axios.get(`http://localhost:50000/sort?sort=${newSort}`);
+    iLPResultList.value = res.data;
+    listSize.value = iLPResultList.value.length;
+    // ローディング終了
+    loading.value = false;    //アニメーションを閉じる
+  }, 500);
+});
+
+const sortOptions = [
+  { value: "default", label: "標準" },
+  { value: "totalPrice", label: "金額の少ない順" },
+  { value: "totalKcal", label: "総カロリーの少ない順" },
+  { value: "typesOfIng", label: "食材の種類が少ない順" },
+];
+
+const activeModal = ref(null); // 'sort' | 'filter' | 'options' | null  ソート・絞り込み・設定変更のモーダルを用意
+const openModal = (name) => {
+  activeModal.value = name;
+};
+const closeModal = () => {
+  activeModal.value = null;
+};
 </script>
 
 
@@ -28,10 +69,42 @@ const listSize = ilpResultList.length;
     <!-- 並び替え・絞り込み・オプション変更ボタン -->
     <div class="flex justify-between items-center w-full">
       <div class="flex gap-2">
-        <button class="flex flex-col items-center justify-center gap-1 px-3 rounded-xl min-h-[44px]">
+        <!-- ボタン: 並び替え-->
+        <button class="flex flex-col items-center justify-center gap-1 px-3 rounded-xl min-h-[44px]" @click="openModal('sort')">
           <span class="material-symbols-outlined">swap_horiz</span>
           <span class="text-xs font-medium text-primary">並び替え</span>
         </button>
+        <!-- モーダルウィンドウ: 並び替え -->
+        <ModalSquare :show="activeModal === 'sort'" @close="closeModal">
+          <h2 class="text-lg text-left font-semibold mb-4">並び順</h2>
+          <!-- 並び替え用のラジオボタンなど -->
+          <form class="space-y-3">
+            <label
+              v-for="opt in sortOptions"
+              :key="opt.value"
+              class="flex items-center space-x-2"
+            >
+              <input
+                type="radio"
+                name="sortOption"
+                :value="opt.value"
+                v-model="selectedSort"
+                class="form-radio"
+              />
+              <span>{{ opt.label }}</span>
+            </label>
+          </form>
+        </ModalSquare>
+        <!-- ローディング風のオーバーレイ -->
+        <div v-if="loading" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <!-- Tailwindのスピナーアニメ -->
+          <div class="flex space-x-2 items-center justify-center">
+            <div class="w-4 h-4 bg-gray-50 rounded-full transform scale-75 animate-ping"></div>
+            <div class="w-4 h-4 bg-gray-50 rounded-full transform scale-75 animate-ping" style="animation-delay: 0.1s;"></div>
+            <div class="w-4 h-4 bg-gray-50 rounded-full transform scale-75 animate-ping" style="animation-delay: 0.2s;"></div>
+          </div>
+        </div>
+        <!-- ボタン: 絞り込み-->
         <button class="flex flex-col items-center justify-center gap-1 px-3 rounded-xl min-h-[44px]">
           <span class="material-symbols-outlined">filter_list</span>
           <span class="text-xs font-medium text-primary">絞り込み</span>
@@ -46,7 +119,7 @@ const listSize = ilpResultList.length;
     <!-- 計算結果のカードカルーセル -->
     <div class="flex overflow-x-scroll snap-x gap-4 p-4">
       <div       
-      v-for="iLPResult in ilpResultList"
+      v-for="(iLPResult, index) in iLPResultList"
       :key="iLPResult.id"
       class="flex-shrink-0 w-full snap-center">      
         <!-- 白色の角丸四角形 -->
@@ -86,7 +159,7 @@ const listSize = ilpResultList.length;
 
             <!-- カードのフッター -->
             <div class="flex justify-between items-center">
-              <span class="text-label-large font-medium text-on-surface">{{iLPResult.id}}/{{ listSize }}</span>
+              <span class="text-label-large font-medium text-on-surface">{{index + 1}}/{{ listSize }}</span>
               <span class="material-symbols-outlined text-green-600">bar_chart_4_bars</span>
             </div>
           </div>
@@ -95,7 +168,7 @@ const listSize = ilpResultList.length;
     </div>
 
     <!-- 注意書き-->
-    <p class="text-gray-600 text-label-small text-left text-on-surface p-4 ">※食材のみの目安金額、生の状態での合計カロリーです</p>
+    <p class="text-gray-600 text-left text-on-surface p-4 ">※食材のみの目安金額、生の状態での合計カロリーです</p>
 
     <!-- レシピ生成ボタン -->
     <div class="flex justify-center">

@@ -6,7 +6,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Arrays;
 
-import com.gwork.demo.util.DataAdjuster;
+import com.gwork.demo.util.DataAdjusterForILP;
 
 import com.google.ortools.init.OrToolsVersion;
 import com.google.ortools.linearsolver.MPConstraint;
@@ -30,9 +30,9 @@ public class testIntegerLP {
 
   public static void main(String args[]){
 
-    double[][] stapleAndProtein = DataAdjuster.stapleAndProtein;
-    String[] spIng = DataAdjuster.spIng;
-    double[] staVolOfsAndP = DataAdjuster.staVolOfsAndP;
+    double[][] stapleAndProtein = DataAdjusterForILP.stapleAndProtein;
+    String[] spIng = DataAdjusterForILP.spIng;
+    double[] staVolOfsAndP = DataAdjusterForILP.staVolOfsAndP;
     //List<CalcResultService> ;
 
     long startTime = System.currentTimeMillis(); // 開始時刻を記録
@@ -51,7 +51,7 @@ public class testIntegerLP {
         LinkedHashMap<String, Integer> nutrients;
         System.out.println("-------------------------------------------------------------");
         System.out.println(spIng[stapleIndex] + " " + staVolOfsAndP[stapleIndex] + "g , " + spIng[proteinIndex] + " " + staVolOfsAndP[proteinIndex] + "g で計算");
-        DataAdjuster dataAdjusterService = new DataAdjuster(stapleIndex, proteinIndex);   //ここで栄養素目標・カロリーバランスの固定値で補正が入る
+        DataAdjusterForILP dataAdjusterService = new DataAdjusterForILP(stapleIndex, proteinIndex);   //ここで栄養素目標・カロリーバランスの固定値で補正が入る
         Optional<int []> solutionOpt = solveILP(dataAdjusterService);   //解ベクトルしか返ってこない
         if(!solutionOpt.isPresent()){   //計算不可ならばスキップ
           System.out.println(spIng[stapleIndex] + " , " + spIng[proteinIndex] + " -> 計算不可能です");
@@ -80,10 +80,10 @@ public class testIntegerLP {
 
 
   // --- ILPで解く ---
-  public static Optional<int []> solveILP(DataAdjuster dataAdjusterService) {
-    final double[] prices = DataAdjuster.prices;
-    final double[][] vegetable = DataAdjuster.vegetable;
-    final double[] staVolOfVeg = DataAdjuster.staVolOfVeg;
+  public static Optional<int []> solveILP(DataAdjusterForILP dataAdjusterService) {
+    final double[] prices = DataAdjusterForILP.prices;
+    final double[][] vegetable = DataAdjusterForILP.vegetable;
+    final double[] staVolOfVeg = DataAdjusterForILP.staVolOfVeg;
     //System.out.println(Arrays.toString(staVolOfVeg));
     final double[] modifiedTargets = dataAdjusterService.modifiedTargets;
     final double[] fixedEnergyValue = dataAdjusterService.fixedEnergyValue;
@@ -176,11 +176,11 @@ public class testIntegerLP {
 
 
   // --- 実現値を確認する --- 
-  public static double[] checkRealize(int[] result, DataAdjuster dataAdjusterService, int stapleIndex, int proteinIndex){
+  public static double[] checkRealize(int[] result, DataAdjusterForILP dataAdjusterService, int stapleIndex, int proteinIndex){
     final double[] modifiedTargets = dataAdjusterService.modifiedTargets;
-    final double[][] stapleAndProtein = DataAdjuster.stapleAndProtein;
-    final double[] staVolOfsAndP = DataAdjuster.staVolOfsAndP;
-    final double[][] vegetable = DataAdjuster.vegetable;
+    final double[][] stapleAndProtein = DataAdjusterForILP.stapleAndProtein;
+    final double[] staVolOfsAndP = DataAdjusterForILP.staVolOfsAndP;
+    final double[][] vegetable = DataAdjusterForILP.vegetable;
     final double[] realize = new double[modifiedTargets.length];
     int pCalColNum = (stapleAndProtein[0].length - 1) - 9;  //"タンパク質のエネルギー"の列番号
     int fCalColNum = pCalColNum + 1;
@@ -216,7 +216,7 @@ public class testIntegerLP {
 
   // --- 合計価格の計算 --- 
   public static int getTotalPrice(int[] solution){
-    final double[] prices = DataAdjuster.prices;
+    final double[] prices = DataAdjusterForILP.prices;
     int totalPrice = 0;
     for(int i=0; i<solution.length; i++){
       totalPrice += (int) solution[i] * prices[i];
@@ -228,8 +228,8 @@ public class testIntegerLP {
   // --- solution を{材料名：グラム数}の辞書に変換 --- 
   private static LinkedHashMap<String, String> formatSolution(int[] solution){
     LinkedHashMap<String, String> formatSolution = new LinkedHashMap<>();
-    final String[] vegIng = DataAdjuster.vegIng;
-    final int[] unitQuantity = DataAdjuster.unitQuantity;
+    final String[] vegIng = DataAdjusterForILP.vegIng;
+    final int[] unitQuantity = DataAdjusterForILP.unitQuantity;
     for(int i=0; i<solution.length; i++){
       if(solution[i] != 0){
         formatSolution.put(vegIng[i], (solution[i] * unitQuantity[i]) + "g");

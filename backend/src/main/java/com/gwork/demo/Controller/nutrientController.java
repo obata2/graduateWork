@@ -7,9 +7,9 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.gwork.demo.Service.IntegerLinearService;
+import com.gwork.demo.Service.SolveILPService;
 import com.gwork.demo.Service.NutrientService;
-import com.gwork.demo.util.ILPResult;
+import com.gwork.demo.util.ILPResultDTO;
 
 @RestController
 @RequestMapping("/nutrient")
@@ -21,10 +21,10 @@ public class nutrientController {
     }
 
     @Autowired
-    private final IntegerLinearService integerLinearService = new IntegerLinearService();
+    private final SolveILPService integerLinearService = new SolveILPService();
 
     @GetMapping("/calc")
-    public ArrayList<ILPResult> calc(){
+    public ArrayList<ILPResultDTO> calc(){
         return integerLinearService.getILPResultList();
     }
 }
