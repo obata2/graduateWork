@@ -3,6 +3,8 @@ export default {
   name: "ModalSquare",
   props: {
     show: { type: Boolean, required: true },
+    width: { type: String},   // 横幅
+    height: { type: String}   // 高さ
   },
   emits: ["close"],
   methods: {
@@ -19,7 +21,7 @@ export default {
     class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50"
     @click.self="close"
   >
-    <div class="relative bg-white rounded-lg shadow-lg w-80 p-6">
+    <div class="relative bg-white rounded-lg shadow-lg p-6" :style="{ width: width, height: height }">
       <!-- 閉じるボタン -->
       <button
         class="absolute top-2 right-2 text-xl text-gray-400 hover:text-gray-600"

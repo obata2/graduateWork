@@ -30,8 +30,8 @@ public class testIntegerLP {
 
   public static void main(String args[]){
 
-    double[][] stapleAndProtein = DataAdjusterForILP.stapleAndProtein;
-    String[] spIng = DataAdjusterForILP.spIng;
+    double[][] stapleAndProtein = DataAdjusterForILP.sAndPNutTable;
+    String[] spIng = DataAdjusterForILP.sAndPName;
     double[] staVolOfsAndP = DataAdjusterForILP.staVolOfsAndP;
     //List<CalcResultService> ;
 
@@ -82,7 +82,7 @@ public class testIntegerLP {
   // --- ILPで解く ---
   public static Optional<int []> solveILP(DataAdjusterForILP dataAdjusterService) {
     final double[] prices = DataAdjusterForILP.prices;
-    final double[][] vegetable = DataAdjusterForILP.vegetable;
+    final double[][] vegetable = DataAdjusterForILP.vegNutTable;
     final double[] staVolOfVeg = DataAdjusterForILP.staVolOfVeg;
     //System.out.println(Arrays.toString(staVolOfVeg));
     final double[] modifiedTargets = dataAdjusterService.modifiedTargets;
@@ -178,9 +178,9 @@ public class testIntegerLP {
   // --- 実現値を確認する --- 
   public static double[] checkRealize(int[] result, DataAdjusterForILP dataAdjusterService, int stapleIndex, int proteinIndex){
     final double[] modifiedTargets = dataAdjusterService.modifiedTargets;
-    final double[][] stapleAndProtein = DataAdjusterForILP.stapleAndProtein;
+    final double[][] stapleAndProtein = DataAdjusterForILP.sAndPNutTable;
     final double[] staVolOfsAndP = DataAdjusterForILP.staVolOfsAndP;
-    final double[][] vegetable = DataAdjusterForILP.vegetable;
+    final double[][] vegetable = DataAdjusterForILP.vegNutTable;
     final double[] realize = new double[modifiedTargets.length];
     int pCalColNum = (stapleAndProtein[0].length - 1) - 9;  //"タンパク質のエネルギー"の列番号
     int fCalColNum = pCalColNum + 1;
@@ -228,7 +228,7 @@ public class testIntegerLP {
   // --- solution を{材料名：グラム数}の辞書に変換 --- 
   private static LinkedHashMap<String, String> formatSolution(int[] solution){
     LinkedHashMap<String, String> formatSolution = new LinkedHashMap<>();
-    final String[] vegIng = DataAdjusterForILP.vegIng;
+    final String[] vegIng = DataAdjusterForILP.vegName;
     final int[] unitQuantity = DataAdjusterForILP.unitQuantity;
     for(int i=0; i<solution.length; i++){
       if(solution[i] != 0){

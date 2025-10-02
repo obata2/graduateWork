@@ -1,12 +1,25 @@
 <script setup>
-import { ref, watch } from "vue";
+import { ref, watch, nextTick } from "vue";
 import axios from "axios";
 import ModalSquare from "C:\\Users\\81809\\Desktop\\demo\\frontend\\src\\components\\ModalSquare.vue";
+import NutrientsContriRateGraph from '../components/NutrientsContriRateGraph.vue';
+import PfcContriRateGraph from '../components/PfcContriRateGraph.vue';
 
+// --- モーダルの表示まわり ---
+const activeModal = ref(null); // 'sort' | 'filter' | 'options' | 'graph' | null      <ModalSquare :show="activeModal === '○○'"に引っかかることで任意のモーダルを呼び出す  
+const openModal = (name) => {
+  activeModal.value = name;
+};
+const closeModal = () => {
+  activeModal.value = null;         //<ModalSquare :show="activeModal === '○○'" のいずれにも引っかからなくなる
+};
+
+// --- ソート機能まわり ---
 const selectedSort = ref("default"); // 初期のソート順: 標準
 const iLPResultList = ref([]);
 const listSize = ref(0);
 const loading = ref(false);
+
 // 初期読み込み
 const loadInitial = async () => {
   const res = await axios.get(`http://localhost:50000/sort?sort=${selectedSort.value}`);
@@ -15,16 +28,16 @@ const loadInitial = async () => {
 };
 loadInitial();
 
-// 並び替え選択が変わったらAPI呼び出し
+// 並び替え選択(selectedSort)が変わったらAPI呼び出し
 watch(selectedSort, async (newSort) => {
   closeModal();               //モーダルウィンドウを閉じて
-  loading.value = true;       //更新のアニメーションに移行
+  loading.value = true;       //ローディングのアニメーションに移行
   setTimeout(async () => {
     const res = await axios.get(`http://localhost:50000/sort?sort=${newSort}`);
     iLPResultList.value = res.data;
     listSize.value = iLPResultList.value.length;
-    // ローディング終了
-    loading.value = false;    //アニメーションを閉じる
+    // 0.5秒経ったらローディングのアニメーションを閉じる
+    loading.value = false;
   }, 500);
 });
 
@@ -35,13 +48,18 @@ const sortOptions = [
   { value: "typesOfIng", label: "食材の種類が少ない順" },
 ];
 
-const activeModal = ref(null); // 'sort' | 'filter' | 'options' | null  ソート・絞り込み・設定変更のモーダルを用意
-const openModal = (name) => {
-  activeModal.value = name;
-};
-const closeModal = () => {
-  activeModal.value = null;
-};
+// --- グラフ描画まわり ---
+const graphTab = ref('nutrients');
+const nutrientsContriGraphData = ref([]);
+const pfcContriGraphData = ref([]);
+function openGraph(nutrientsContriRate, pfcContriRate) {
+  nutrientsContriGraphData.value = null;     // 一度空にする
+  pfcContriGraphData.value = null;
+  nextTick(() => {
+    nutrientsContriGraphData.value = nutrientsContriRate;   //ここでのデータ変更がContriGraph内でwatchされ、グラフの描画が始まる
+    pfcContriGraphData.value = pfcContriRate;
+  })
+}
 </script>
 
 
@@ -74,36 +92,6 @@ const closeModal = () => {
           <span class="material-symbols-outlined">swap_horiz</span>
           <span class="text-xs font-medium text-primary">並び替え</span>
         </button>
-        <!-- モーダルウィンドウ: 並び替え -->
-        <ModalSquare :show="activeModal === 'sort'" @close="closeModal">
-          <h2 class="text-lg text-left font-semibold mb-4">並び順</h2>
-          <!-- 並び替え用のラジオボタンなど -->
-          <form class="space-y-3">
-            <label
-              v-for="opt in sortOptions"
-              :key="opt.value"
-              class="flex items-center space-x-2"
-            >
-              <input
-                type="radio"
-                name="sortOption"
-                :value="opt.value"
-                v-model="selectedSort"
-                class="form-radio"
-              />
-              <span>{{ opt.label }}</span>
-            </label>
-          </form>
-        </ModalSquare>
-        <!-- ローディング風のオーバーレイ -->
-        <div v-if="loading" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <!-- Tailwindのスピナーアニメ -->
-          <div class="flex space-x-2 items-center justify-center">
-            <div class="w-4 h-4 bg-gray-50 rounded-full transform scale-75 animate-ping"></div>
-            <div class="w-4 h-4 bg-gray-50 rounded-full transform scale-75 animate-ping" style="animation-delay: 0.1s;"></div>
-            <div class="w-4 h-4 bg-gray-50 rounded-full transform scale-75 animate-ping" style="animation-delay: 0.2s;"></div>
-          </div>
-        </div>
         <!-- ボタン: 絞り込み-->
         <button class="flex flex-col items-center justify-center gap-1 px-3 rounded-xl min-h-[44px]">
           <span class="material-symbols-outlined">filter_list</span>
@@ -160,7 +148,12 @@ const closeModal = () => {
             <!-- カードのフッター -->
             <div class="flex justify-between items-center">
               <span class="text-label-large font-medium text-on-surface">{{index + 1}}/{{ listSize }}</span>
-              <span class="material-symbols-outlined text-green-600">bar_chart_4_bars</span>
+              <button @click="() => {
+                openModal('graph');
+                nextTick(() => openGraph(iLPResult.nutrientsContriRate, iLPResult.pfcContriRate));
+              }"><!-- openModalでモーダルが表示された後、openGraphでデータが書き換わりグラフ描画がされる -->
+                <span class="material-symbols-outlined text-green-600 text-3xl">bar_chart_4_bars</span>
+              </button>
             </div>
           </div>
         </div>
@@ -176,5 +169,57 @@ const closeModal = () => {
         レシピを生成する
       </button>
     </div>
+
+    <!-- ↓モーダルウィンドウたち↓ -->
+    <!-- 並び替えオプション選択画面 -->
+    <ModalSquare :show="activeModal === 'sort'" width="60%" @close="closeModal">
+      <h2 class="text-lg text-left font-semibold mb-4">並び順</h2>
+      <!-- ラジオボタン -->
+      <form class="space-y-3">
+        <label
+          v-for="opt in sortOptions"
+          :key="opt.value"
+          class="flex items-center space-x-2"
+        >
+          <input
+            type="radio"
+            name="sortOption"
+            :value="opt.value"
+            v-model="selectedSort"      
+            class="form-radio"
+          /><!-- valueの変更に合わせてselectedSortの中身も書き換わる-->
+          <span>{{ opt.label }}</span>
+        </label>
+      </form>
+    </ModalSquare>
+    <!-- ローディング風のアニメーション -->
+    <div v-if="loading" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <!-- Tailwindのスピナーアニメ -->
+      <div class="flex space-x-2 items-center justify-center">
+        <div class="w-4 h-4 bg-gray-50 rounded-full transform scale-75 animate-ping"></div>
+        <div class="w-4 h-4 bg-gray-50 rounded-full transform scale-75 animate-ping" style="animation-delay: 0.1s;"></div>
+        <div class="w-4 h-4 bg-gray-50 rounded-full transform scale-75 animate-ping" style="animation-delay: 0.2s;"></div>
+      </div>
+    </div>
+    <!-- 寄与率のグラフ描画 -->
+    <ModalSquare :show="activeModal === 'graph'" width="100%" height="70%" @close="closeModal">
+      <div class="relative">
+        <!-- 付箋風タブ切り替え -->
+        <div class="absolute -top-14 flex z-10">
+          <button
+            @click="graphTab = 'nutrients'"
+            class="px-4 py-1 rounded-t-lg"
+            :class="graphTab === 'nutrients' ? 'bg-white text-green-600 border-b-0' : 'bg-gray-200 text-gray-600'"
+          >栄養素</button>
+          <button
+            @click="graphTab = 'calories'"
+            class="px-4 py-1 rounded-t-lg"
+            :class="graphTab === 'calories' ? 'bg-white text-green-600 border-b-0' : 'bg-gray-200 text-gray-600'"
+          >カロリー</button>
+        </div>
+        <div v-show="graphTab === 'nutrients'"><NutrientsContriRateGraph :graphData="nutrientsContriGraphData"/></div>
+        <div v-show="graphTab === 'calories'"><PfcContriRateGraph :graphData="pfcContriGraphData"/></div>
+      </div>
+    </ModalSquare>
   </div>
 </template>
