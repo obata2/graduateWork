@@ -1,4 +1,5 @@
 /** @type {import('tailwindcss').Config} */
+console.log("Tailwind config loaded");
 export default {
   content: [
     "./index.html",
@@ -24,6 +25,7 @@ export default {
         // Custom gradient colors
         'gradient-start': '#FDE0FF',
         'gradient-end': '#C18CD9',
+        'warm': '#fef6f0',
       },
       fontFamily: {
         roboto: ['Roboto', 'system-ui', 'sans-serif'],

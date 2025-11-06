@@ -1,4 +1,4 @@
-package com.gwork.demo.Service;
+package com.gwork.demo.Service.ilp;
 
 import java.io.File;
 import java.io.IOException;
@@ -9,8 +9,6 @@ import java.util.Comparator;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.core.type.TypeReference;
-
-import com.gwork.demo.util.ILPResultDTO;
 
 public class SortILPResult {
   public List<ILPResultDTO> ilpResultList= new ArrayList<>();

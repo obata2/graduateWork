@@ -3,8 +3,8 @@ package com.gwork.demo;
 import org.apache.commons.math3.optim.linear.*;
 import org.apache.commons.math3.optim.nonlinear.scalar.GoalType;
 
-import com.gwork.demo.Service.JsonProcesserService;
-import com.gwork.demo.Service.NutrientService;
+import com.gwork.demo.Service.estat.ProcessEstatService;
+import com.gwork.demo.Service.nutrient.NutrientService;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -18,7 +18,7 @@ import org.apache.commons.math3.optim.PointValuePair;
 public class testLP {
   public static void main(String args[]){
 
-    JsonProcesserService jsonProcesserService = new JsonProcesserService();
+    ProcessEstatService jsonProcesserService = new ProcessEstatService();
     NutrientService nutrientService = new NutrientService();
 
     double[][] stapleAndProtein = nutrientService.getStapleAndProtein(); //主食・肉の栄養テーブル

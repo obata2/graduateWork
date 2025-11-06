@@ -8,7 +8,7 @@ defineEmits(['update:modelValue'])
 
 <template>
   <!-- フッター全体 -->
-  <div class="sticky bottom-0 flex justify-between items-center px-8 h-16 bg-white">
+  <div class="sticky bottom-0 flex justify-between items-center px-8 h-20 bg-white">
     <!-- 左：データタブ -->
     <button @click="$emit('update:modelValue', 'data')"
       :class="[

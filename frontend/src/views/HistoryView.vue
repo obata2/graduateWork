@@ -26,7 +26,7 @@ const sendCalc = async () => {
 </script>
 
 <template>
-  <div>
+  <div class="bg-secondary flex-1">
   <button @click="callApi">Hello API</button>
   <p v-if="message">{{ message }}</p>  <!-- ← ボタン下に表示 -->
   <br>

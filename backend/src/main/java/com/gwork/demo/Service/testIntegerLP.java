@@ -6,13 +6,12 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Arrays;
 
-import com.gwork.demo.util.DataAdjusterForILP;
-
 import com.google.ortools.init.OrToolsVersion;
 import com.google.ortools.linearsolver.MPConstraint;
 import com.google.ortools.linearsolver.MPObjective;
 import com.google.ortools.linearsolver.MPSolver;
 import com.google.ortools.linearsolver.MPVariable;
+import com.gwork.demo.Service.ilp.DataAdjusterForILP;
 
 public class testIntegerLP {
 

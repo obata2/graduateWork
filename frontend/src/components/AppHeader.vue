@@ -1,6 +1,6 @@
 <template>
   <!-- ヘッダー全体 -->
-  <header class="flex justify-between items-center px-4 h-16 bg-white">
+  <header class="flex justify-between items-center px-4 h-20 bg-white">
     <!-- 左：ハンバーガーメニュー -->
     <button class="flex items-center justify-center w-12 h-12">
       <span class="material-symbols-outlined">menu</span>

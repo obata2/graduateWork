@@ -6,8 +6,8 @@ import java.util.Map;
 import java.util.Arrays;
 import java.util.Comparator;
 
-import com.gwork.demo.Service.JsonProcesserService;
-import com.gwork.demo.Service.NutrientService;
+import com.gwork.demo.Service.estat.ProcessEstatService;
+import com.gwork.demo.Service.nutrient.NutrientService;
 
 public class testGenetic {
   
@@ -18,7 +18,7 @@ public class testGenetic {
   static final double MUTATION_RATE = 0.1; //突然変異の確率
   static final int TOURNAMENT_SIZE = 3;  //トーナメントサイズ
 
-  static JsonProcesserService jsonProcesserService = new JsonProcesserService();
+  static ProcessEstatService jsonProcesserService = new ProcessEstatService();
   static NutrientService nutrientService = new NutrientService();
   static double[][] stapleAndProtein = nutrientService.getStapleAndProtein(); //主食・肉の栄養テーブル
   static double[][] vegetable = nutrientService.getVegetable(); //野菜類の栄養テーブル
