@@ -25,6 +25,7 @@ export default {
         // Custom gradient colors
         'gradient-start': '#FDE0FF',
         'gradient-end': '#C18CD9',
+
         'warm': '#fef6f0',
       },
       fontFamily: {
@@ -45,5 +46,17 @@ export default {
       },
     },
   },
-  plugins: [],
+  plugins: [
+    function ({ addUtilities }) {
+      // 完全な自作クラスは以下に追加する
+      const newUtilities = {
+        // ボーダーにfrom green-400 to teal-400 のグラデーション
+        '.border-gradient': {
+          borderImage: 'linear-gradient(to right, #4ade80, #2dd4bf) 1',
+        },
+      };
+
+      addUtilities(newUtilities);
+    },
+  ],
 }

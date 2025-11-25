@@ -222,7 +222,7 @@ const activeTab = ref("tab1");
       </div>
     </div>
 
-    <button class="w-full px-6 py-2 mt-6 mb-12 text-green-700 bg-green-200 text-title-medium font-medium rounded"
+    <button class="w-full px-6 py-2 mt-6 mb-12 bg-gradient-to-r from-green-300 to-teal-300 text-title-medium font-medium rounded"
             @click="fetchEstat">
       グラフを描画
     </button>
