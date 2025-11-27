@@ -1,5 +1,6 @@
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, inject } from 'vue'
+import axios from "axios"
 
 const keywords = ref([
   { id: 1, text: '時短で料理'},
@@ -45,7 +46,6 @@ const sendMessage = async (msg) => {
 
   // API呼び出しでgeminiに質問する
   const reply = await fakeApi(userMessage);
-  */
 
   // AIの返答追加
   messages.value.push({
@@ -53,10 +53,31 @@ const sendMessage = async (msg) => {
     text: "ここにgeminiからの返答が入ります-------------------------------------------------------"
   });
   saveMessages();
+  */
+
+  const reply = await sampleApi()
+  messages.value.push({
+    role: "assistant",
+    text: reply.text,
+    meals: Array.isArray(reply.meals) && reply.meals.length > 0
+          ? reply.meals
+          : null
+  });
+  saveMessages();
 };
 
-// geminiのAPIを呼び出す
+// 確認用のサンプルAPIを呼び出す
+const sampleApi = async () => {
+  const res =  await axios.get(`http://localhost:50000/chat/sampleMessage`);
+  return res.data
+};
 
+// App.vue が提供した関数を受け取る
+const openFullScreen = inject('openFullScreen')
+/*
+const openMealDetail = () => {
+  openFullScreen('mealDetail')
+}*/
 
 </script>
 
@@ -64,7 +85,7 @@ const sendMessage = async (msg) => {
 
   <!-- レイアウト関係→それ自身のサイズ関係→文字のフォントや大きさ関係→背景・影関係→色関係→アニメーション・その他 -->
 
-  <div class="px-4 pt-12 sm:px-5">
+  <div class="px-4 pt-12 sm:px-5 flex flex-col">
     <!-- ヘッダー -->
     <h2 class="pb-6 font-semibold">
       キーワードをもとにして、AIが献立を生成します
@@ -81,14 +102,15 @@ const sendMessage = async (msg) => {
       </button>
     </div>
 
-    <!-- 会話内容の表示エリア -->
-    <div class="space-y-2">
+    <!-- チャットの表示エリア -->
+    <div class="flex-1 overflow-y-auto space-y-2">
       <div
         v-for="(m, i) in messages"
         :key="i"
         class="flex"
         :class="m.role === 'user' ? 'justify-end' : 'justify-start'"
       >
+        <!-- 吹き出しとその中身 -->
         <div
           class="px-3 py-2 rounded-lg text-sm"
           :class="m.role === 'user'
@@ -96,6 +118,17 @@ const sendMessage = async (msg) => {
             : 'bg-gray-100 max-w-[80%]'"
         >
           {{ m.text }}
+          <!-- meals が存在する場合だけ表示 -->
+          <ul v-if="m.meals && m.meals.length" class="mt-3 space-y-2">
+            <li
+              v-for="(meal, idx) in m.meals"
+              :key="idx"
+              class="text-orange-600 underline cursor-pointer"
+              @click="openFullScreen('mealDetail', meal)"
+            >
+              {{ idx + 1 }}. {{ meal.menu_name }}
+            </li>
+          </ul>
         </div>
       </div>
     </div>

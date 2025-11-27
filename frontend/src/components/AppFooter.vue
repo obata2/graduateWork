@@ -27,14 +27,14 @@ defineEmits(['update:modelValue'])
       <span class="material-symbols-outlined">dinner_dining</span>
       <span class="text-label-medium font-medium">献立</span>
     </button>
-    <!-- 右：履歴タブ -->
-    <button @click="$emit('update:modelValue', 'history')"
+    <!-- 右：お気に入りタブ -->
+    <button @click="$emit('update:modelValue', 'favorite')"
       :class="[
       'flex flex-col items-center justify-center w-20 h-24 rounded-2xl transition-all duration-150',
-      modelValue === 'history' ? 'text-green-600' : 'text-gray-600'
+      modelValue === 'favorite' ? 'text-green-600' : 'text-gray-600'
     ]">
-      <span class="material-symbols-outlined">history</span>
-      <span class="text-label-medium font-medium">履歴</span>
+      <span class="material-symbols-outlined">favorite</span>
+      <span class="text-label-medium font-medium">お気に入り</span>
     </button>
   </div>
 </template>
