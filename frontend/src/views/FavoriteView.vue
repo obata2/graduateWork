@@ -17,7 +17,9 @@ const callApi = async () => {
 
 const sendCalc = async () => {
   try {
-    const response = await axios.post('http://localhost:50000/api/calc', 5)
+    const response = await axios.post('http://localhost:50000/api/calc',
+    { x: 5 },
+    { headers: { 'Content-Type': 'application/json' } })
     calcResult.value = response.data   // ← 結果を変数calcResultに保存
   } catch (error) {
     console.error(error)

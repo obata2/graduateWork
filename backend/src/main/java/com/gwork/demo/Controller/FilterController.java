@@ -1,4 +1,4 @@
-package com.gwork.demo.Controller;
+package com.gwork.demo.controller;
 
 import java.util.Map;
 

@@ -65,7 +65,7 @@ function openGraph(nutrientsContriRate, pfcContriRate) {
 
 <template>  
   <!-- 献立タブのメインコンテンツ -->
-  <div class="px-4 sm:px-5 pb-8">
+  <div class="px-4 pt-12 sm:px-5 flex flex-col">
     <!-- 考え事をしている女性のイラストと吹き出し -->
     <div class="flex items-center m-6 sm:mb-6 gap-6 border-black">
       <img
@@ -85,7 +85,7 @@ function openGraph(nutrientsContriRate, pfcContriRate) {
     </div>
 
     <!-- 並び替え・絞り込み・オプション変更ボタン -->
-    <div class="flex justify-between items-center w-full">
+    <div class="flex justify-between items-center">
       <div class="flex gap-2">
         <!-- ボタン: 並び替え-->
         <button class="flex flex-col items-center justify-center gap-1 px-3 rounded-xl min-h-[44px]" @click="openModal('sort')">

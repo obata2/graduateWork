@@ -58,4 +58,19 @@ public class SortILPResult {
       .thenComparing(r -> r.id)
     );
   }
+
+  // --- インスタンス変数を一部トリミングする ---
+  public List<ILPResultDTO> trimILPResultDTOs(){
+    List<ILPResultDTO> trimmedList = this.ilpResultList.stream()
+    .map(m -> {
+        ILPResultDTO copy = new ILPResultDTO();
+        copy.setId(m.getId());
+        copy.setIngredients(m.getIngredients());
+        copy.setTotalPrice(m.getTotalPrice());
+        copy.setTotalKcal(m.getTotalKcal());
+        return copy;
+    })
+    .toList();
+    return trimmedList;
+  }
 }

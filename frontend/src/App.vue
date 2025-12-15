@@ -4,7 +4,8 @@ import AppHeader from './components/AppHeader.vue'
 import AppFooter from './components/AppFooter.vue'
 import DataView from './views/DataView.vue'
 import MealView from './views/MealView.vue'
-import FavoriteView from './views/FavoriteView.vue'
+import MealView_discard from './views/MealView_discard.vue'
+//import FavoriteView from './views/FavoriteView.vue'
 
 import MealDetail from './components/MealDetail.vue'
 
@@ -14,7 +15,7 @@ const activeTabComponent = computed(() => {
   switch (activeTab.value) {
     case 'data': return DataView
     case 'meal': return MealView
-    case 'favorite': return FavoriteView
+    case 'favorite': return MealView_discard
     default: return MealView
   }
 })

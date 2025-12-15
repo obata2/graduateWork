@@ -140,7 +140,7 @@ const activeTab = ref("tab1");
   
   <div class="flex flex-col flex-1 w-full">
     <!-- 上部のタブ切り替え(共通) -->
-    <div class="flex mt-4 border-b">
+    <div class="flex sticky top-20 mt-4 border-b bg-white">
       <button
         v-for="tab in tabs"
         :key="tab.id"

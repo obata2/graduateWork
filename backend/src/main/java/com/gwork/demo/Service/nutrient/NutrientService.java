@@ -103,7 +103,7 @@ public class NutrientService {
       id[0] = new String[rowSize];
       name[0] = new String[rowSize];
       standardQty[0] = new double[rowSize];
-      nutrientTable[0] = new double[rowSize][(lastNutrientColIndex + 1) - 5]; // 3行分、5列分の栄養素データではない部分を除外したサイズ
+      nutrientTable[0] = new double[rowSize][(lastNutrientColIndex + 1) - 6]; // 3行分、6列分の栄養素データではない部分を除外したサイズ
       for (int i = startRowIndex; i <= lastRowIndex; i++) {
         Row row = sheet.getRow(i);
         // 価格が何グラム単位かを取り出す(計算用)
@@ -152,7 +152,7 @@ public class NutrientService {
       id[1] = new String[rowSize];
       name[1] = new String[rowSize];
       standardQty[1] = new double[rowSize];
-      nutrientTable[1] = new double[rowSize][(lastNutrientColIndex + 1) - 5]; // 3行分、5列分の栄養素データではない部分を除外したサイズ
+      nutrientTable[1] = new double[rowSize][(lastNutrientColIndex + 1) - 6]; // 3行分、6列分の栄養素データではない部分を除外したサイズ
       for (int i = startRowIndex; i <= lastRowIndex; i++) {
         Row row = sheet.getRow(i);
         // 価格が何グラム単位かを取り出す(計算用)

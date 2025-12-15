@@ -42,6 +42,7 @@ public class DataAdjusterForILP {
   public static String[] vegName = NutrientService.vegName;
   */
   
+  //[0]→主食・肉類      [1]→野菜類
   public static int[] vegUnitQuantity;                  //計算の単位となる野菜類の重量(変数が1増減するときの変化する重量)
   public static double[][][] adjustedNutrientTable = new double[2][][];     //計算の単位となる重量で調整した栄養テーブル
   public static double[][] adjustedStandardQty = new double[2][];         //        〃                    1食分の目安量

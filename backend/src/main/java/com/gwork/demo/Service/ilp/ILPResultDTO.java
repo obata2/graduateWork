@@ -13,6 +13,7 @@ public class ILPResultDTO {
   public LinkedHashMap<String, double[]> pfcContriRate;             //{食材名, [pfcの寄与率の配列]}
   public int[] solutionVector;
 
+  // setter
   public void setId(int id){ this.id = id; }
   public void setIngredients(LinkedHashMap<String, String> ingredients){ this.ingredients = ingredients; }
   public void setTotalPrice(int totalPrice){ this.totalPrice = totalPrice; }
@@ -22,4 +23,10 @@ public class ILPResultDTO {
   public void setNutrientsContriRate(LinkedHashMap<String, double[]> nutrientsContriRate){ this.nutrientsContriRate = nutrientsContriRate; }
   public void setPfcContriRate(LinkedHashMap<String, double[]> pfcContriRate){ this.pfcContriRate = pfcContriRate; }
   public void setSolutionVector(int[] solutionVector){ this.solutionVector = solutionVector; }
+
+  // getter
+  public int getId(){ return this.id; }
+  public LinkedHashMap<String, String> getIngredients(){ return this.ingredients; }
+  public int getTotalPrice(){ return this.totalPrice; }
+  public int getTotalKcal(){ return this.totalKcal; }
 }

@@ -1,4 +1,6 @@
-package com.gwork.demo.Controller;
+package com.gwork.demo.controller;
+
+import java.util.Map;
 
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -16,7 +18,7 @@ public class ApiTestController {
     }
 
     @PostMapping("/calc")
-    public int calc(@RequestBody int x) {
-        return x * 2;
+    public int calc(@RequestBody Map<String, Integer> body) {
+        return body.get("x") * 2;
     }
 }

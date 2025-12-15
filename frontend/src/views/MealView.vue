@@ -15,6 +15,18 @@ const keywords = ref([
 const inputText = ref("");
 const messages = ref([]);
 
+// ILPで得た最適解をもっておく
+const ILPResultList = ref([])
+const loadInitial = async () => {
+  const res = await axios.get(`http://localhost:50000/ILP/checkResult`);
+  ILPResultList.value = res.data;
+};
+loadInitial();
+// idの値でILPResultListの要素を検索する
+const findById = (id) => {
+  return ILPResultList.value.find(result => result.id === id);
+};
+
 // 画面リロード時、会話内容をsessionStorageから復元
 onMounted(() => {
   const saved = sessionStorage.getItem("chat");
@@ -29,33 +41,22 @@ const saveMessages = () => {
 };
 
 // 送信処理
-const sendMessage = async (msg) => {
-  if (!msg.trim()) return;
+const sendMessage = async (keyWord) => {
+  if (!keyWord.trim()) return;
 
   // ユーザーの発言追加
   messages.value.push({
     role: "user",
-    text: msg
+    text: keyWord
   });
   saveMessages();
 
   // 入力欄クリア
   inputText.value = "";
-  /*
-  const userMessage = msg;
 
-  // API呼び出しでgeminiに質問する
-  const reply = await fakeApi(userMessage);
-
-  // AIの返答追加
-  messages.value.push({
-    role: "assistant",
-    text: "ここにgeminiからの返答が入ります-------------------------------------------------------"
-  });
-  saveMessages();
-  */
-
-  const reply = await sampleApi()
+  // geminiに質問する版
+  const reply = await geminiApi(keyWord)
+  console.log(reply)
   messages.value.push({
     role: "assistant",
     text: reply.text,
@@ -64,20 +65,39 @@ const sendMessage = async (msg) => {
           : null
   });
   saveMessages();
+  
+/*
+  // サンプルメッセージ版
+  const reply = await sampleApi()
+  console.log(reply)
+  messages.value.push({
+    role: "assistant",
+    text: reply.text,
+    meals: Array.isArray(reply.meals) && reply.meals.length > 0
+          ? reply.meals
+          : null
+  });
+  */
+  saveMessages();
 };
 
-// 確認用のサンプルAPIを呼び出す
+// geminiに質問するAPI
+const geminiApi = async (keyWord) => {
+  const res =  await axios.post(`http://localhost:50000/chat/generateMeals`,
+  { text: keyWord },
+  { headers: { 'Content-Type': 'application/json' } });
+  return res.data
+};
+
+/* 確認用のサンプルAPIを呼び出す
 const sampleApi = async () => {
   const res =  await axios.get(`http://localhost:50000/chat/sampleMessage`);
   return res.data
 };
+*/
 
 // App.vue が提供した関数を受け取る
 const openFullScreen = inject('openFullScreen')
-/*
-const openMealDetail = () => {
-  openFullScreen('mealDetail')
-}*/
 
 </script>
 
@@ -124,9 +144,14 @@ const openMealDetail = () => {
               v-for="(meal, idx) in m.meals"
               :key="idx"
               class="text-orange-600 underline cursor-pointer"
-              @click="openFullScreen('mealDetail', meal)"
+              @click="openFullScreen(
+                'mealDetail', 
+                {
+                  ...meal,
+                  ...findById(meal.selectedId)
+                })"
             >
-              {{ idx + 1 }}. {{ meal.menu_name }}
+              {{ idx + 1 }}. {{ meal.menuName }}
             </li>
           </ul>
         </div>

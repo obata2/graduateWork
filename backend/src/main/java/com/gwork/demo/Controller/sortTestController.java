@@ -1,4 +1,4 @@
-package com.gwork.demo.Controller;
+package com.gwork.demo.controller;
 
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
