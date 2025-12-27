@@ -21,6 +21,7 @@ public class ChatService {
     return geminiClientService.sampleChat(sample);
   }
 
+  // 送られてきたキーワードを使ってプロンプトを作り、geminiに質問する
   public String chat(String keyWord){
 
     //外部知識はここで用意する
@@ -41,73 +42,10 @@ public class ChatService {
                   + "\nスキーマ:\n" + schema
                   + "\nコンテキスト" + context;
     return geminiClientService.chat(prompt);
-    /*
-    String prompt = "以下の文書を参考に、質問に答えてください。\n\n"
-                  + "参考文書:\n" + context + "\n\n"
-                  + "質問:\n" + userMessage;
-    return geminiClientService.chat(prompt);*/
   }
 
 
   public static String difineSchema() {
-    /* 
-    String schema = "{\r\n" + //
-            "  \"type\": \"object\",\r\n" + //
-            "  \"description\": \"いくつかの種類の献立と、付随するメッセージをレスポンスとして返してください。\",\r\n" + //
-            "  \"properties\": {\r\n" + //
-            "    \"text\": {\r\n" + //
-            "      \"type\": \"string\",\r\n" + //
-            "      \"description\": \"どのような観点で献立を作成したかと、以下の献立の中から1つを選択する旨のメッセージをここに記述してください。\"\r\n" + //
-            "    },\r\n" + //
-            "    \"meals\": {\r\n" + //
-            "      \"type\": \"array\",\r\n" + //
-            "      \"description\": \"1つの献立についての情報をまとめ、それらを並べた配列です。\",\r\n" + //
-            "      \"items\": {\r\n" + //
-            "        \"type\": \"object\",\r\n" + //
-            "        \"description\": \"1つの献立についての詳細な情報をまとめたオブジェクトです。\",\r\n" + //
-            "        \"properties\": {\r\n" + //
-            "          \"menu_name\": {\r\n" + //
-            "            \"type\": \"string\",\r\n" + //
-            "            \"description\": \"献立名をここに記述してください。\"\r\n" + //
-            "          },\r\n" + //
-            "          \"dish_name\": {\r\n" + //
-            "            \"type\": \"object\",\r\n" + //
-            "            \"description\": \"主食は何、副菜は何、というように、各料理の役割についての辞書です。\",\r\n" + //
-            "            \"additionalProperties\": {\r\n" + //
-            "              \"type\": \"string\",\r\n" + //
-            "              \"description\": \"主食：料理名 のように各料理の役割を記載します。\"\r\n" + //
-            "            }\r\n" + //
-            "          },\r\n" + //
-            "          \"ingredients\": {\r\n" + //
-            "            \"type\": \"object\",\r\n" + //
-            "            \"description\": \"必要となる食材と、そのグラム数についての辞書です。コンテキスト内からそのまま抜き出してください。\",\r\n" + //
-            "            \"additionalProperties\": {\r\n" + //
-            "              \"type\": \"string\",\r\n" + //
-            "              \"description\": \"食材名：グラム数 のように必要な量を記載します。単位である'g'をつけ忘れないよう注意してください。\"\r\n" + //
-            "            }\r\n" + //
-            "          },\r\n" + //
-            "          \"instructions\": {\r\n" + //
-            "            \"type\": \"object\",\r\n" + //
-            "            \"description\": \"各料理の調理手順についての辞書です。\",\r\n" + //
-            "            \"additionalProperties\": {\r\n" + //
-            "              \"type\": \"string\",\r\n" + //
-            "              \"description\": \"料理名： 調理手順 のように記載します。なお、料理名は【】で囲んで強調してください。\"\r\n" + //
-            "            }\r\n" + //
-            "          },\r\n" + //
-            "          \"total_price\": {\r\n" + //
-            "            \"type\": \"number\",\r\n" + //
-            "            \"description\": \"その献立にかかるおおよその合計金額です。コンテキスト内からそのまま抜き出してください。単位は'円'を付けてください。\"\r\n" + //
-            "          },\r\n" + //
-            "          \"total_calorie\": {\r\n" + //
-            "            \"type\": \"number\",\r\n" + //
-            "            \"description\": \"その献立のおおよその合計カロリーです。コンテキスト内からそのまま抜き出してください。単位は'kcal'を付けてください。\"\r\n" + //
-            "          }\r\n" + //
-            "        }\r\n" + //
-            "      }\r\n" + //
-            "    }\r\n" + //
-            "  }\r\n" + //
-            "}\r\n" + //
-            "";*/
     String schema = "{\r\n" + //
             "  \"type\": \"object\",\r\n" + //
             "  \"description\": \"いくつかの種類の献立と、付随するメッセージをレスポンスとして返してください。\",\r\n" + //

@@ -34,14 +34,13 @@ public class ProcessEstatService {
     //  ↓cacheから読み込む処理
     this.jsonNode = readPriceStatFromCache(cdArea);
     processStatData(this.jsonNode);
-    
   }
 
 
   // --- 統計データをAPIで取ってくる ---
   public JsonNode downloadFromEstat(String cdTimeFrom, String cdTimeTo, String cdArea) {
     final String BASE_URL = "http://api.e-stat.go.jp/rest/3.0/app/json/getStatsData"; // 小売物価統計のurl
-    final String appId = "ea754c2b09a9735a2f2ea4c33874796724e1e347"; // 自分のAPIキー
+    final String appId = "${ESTAT_API_KEY}"; // 自分のAPIキー
     final String statsDataId = "0003421913"; // 統計表ID
     //final String cdTimeFrom = "2024001212"; // 2024年12月からの
     //final String cdArea = "23100"; // 名古屋における

@@ -17,30 +17,14 @@ public class DataAdjusterForILP {
     "豆腐", 100,
     "納豆", 40
   );
-  /*
-  private static double[] priceUnitOfVeg = NutrientService.priceUnitOfVeg;
-  private static double[] priceUnitOfSAndP = NutrientService.priceUnitOfSAndP;
-  private static String[] vegId = NutrientService.vegId;
-  private static String[] sAndPId = NutrientService.sAndPId;
-  */
+  
   private static double[][][] nutrientTable = NutrientService.nutrientTable;
   private static double[][] standardQty = NutrientService.standardQty;
   private static double[][] priceUnitQtyForILP = NutrientService.priceUnitQtyForILP;
   private static String[][] id = NutrientService.id; 
   private static String[][] ingName = NutrientService.name;
-  private static ProcessEstatService processEstatService = new ProcessEstatService("2024001212", "2025000505", "23100");
+  private static ProcessEstatService processEstatService = new ProcessEstatService();
   private static Map<String, Integer> priceLatest = processEstatService.priceLatest;
-
-  /*SolveILPServiceで用いる変数
-  public static double[][] sAndPNutTable;
-  public static double[][] vegNutTable;
-  public static double[] stdVolOfsAndP;
-  public static double[] stdVolOfVeg;
-  public static double[] pricesOfVeg;
-  public static double[] pricesOfSAndP;
-  public static String[] sAndPName = NutrientService.sAndPName;
-  public static String[] vegName = NutrientService.vegName;
-  */
   
   //[0]→主食・肉類      [1]→野菜類
   public static int[] vegUnitQuantity;                  //計算の単位となる野菜類の重量(変数が1増減するときの変化する重量)
@@ -56,8 +40,8 @@ public class DataAdjusterForILP {
     adjustedStandardQty[1] = adjustStdQtyOfVeg(vegUnitQuantity, standardQty[1], ingName[1], specific);
     adjustedNutrientTable[0] = adjustSAndPNutTable(nutrientTable[0], standardQty[0]);
     adjustedNutrientTable[1] = adjustVegNutrients(nutrientTable[1], vegUnitQuantity);
-    adjustedPrices[0] = setPricesOfSAndP();
-    adjustedPrices[1] = setPricesOfVeg();
+    adjustedPrices[0] = adjustPricesOfSAndP();
+    adjustedPrices[1] = adjustPricesOfVeg();
   }
 
   //状態に依存する変数  →  i,jを引数とするコンストラクタで、状態を保存する
@@ -123,7 +107,7 @@ public class DataAdjusterForILP {
   }
 
   // --- 単位重量あたりの野菜類の価格をarrayとして持つ ---
-  private static double[] setPricesOfVeg(){
+  private static double[] adjustPricesOfVeg(){
     double[] prices = new double[id[1].length];
     for(int i=0; i<prices.length; i++){
       if(!priceLatest.containsKey(id[1][i])){
@@ -153,7 +137,7 @@ public class DataAdjusterForILP {
 
 
   // --- 1食分の目安量あたりの主食・肉類の価格をarrayとして持つ ---
-  private static double[] setPricesOfSAndP(){
+  private static double[] adjustPricesOfSAndP(){
     double[] prices = new double[id[0].length];
     for(int i=0; i<prices.length; i++){
       if(!priceLatest.containsKey(id[0][i])){

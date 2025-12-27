@@ -19,10 +19,10 @@ public class GeminiClientService {
         .build();
   }
 
-  // promptをgeminiに渡し、レスポンスから回答内容の部分を取り出す
+  // プロンプトをgeminiに渡し、レスポンスから回答内容の部分を取り出す
   public String chat(String prompt) {
     Map<String, Object> schema = difineSchema();
-    // 以下の形式でリクエストを送る仕様にgemini側で定められているっぽい
+    // ↓の形式でリクエストを送る仕様にgemini側で定められているっぽい
     Map<String, Object> body = Map.of(
         "contents", List.of(
             Map.of("parts", List.of(Map.of("text", prompt)))));

@@ -10,10 +10,10 @@ const props = defineProps({
     type: Array,
     default: () => []
   },
-  priceUnit: {
+  priceUnitQty: {
     type: String
   },
-  viewIngredient: {
+  ingredientName: {
     type: String
   }
 })
@@ -102,7 +102,7 @@ watch(() => props.graphData, () => {
 
 <template>
   <div class="w-full pb-16" style="height: 350px;">
-    <p>{{ props.viewIngredient }}の価格推移({{ props.priceUnit }}あたり)</p>
+    <div class="font-medium">{{ props.ingredientName }}の価格推移({{ props.priceUnitQty }}あたり)</div>
     <canvas ref="chartCanvas"></canvas>
   </div>
 </template>

@@ -1,4 +1,4 @@
-package com.gwork.demo.Service;
+package com.gwork.demo.Service.favorites;
 
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
@@ -30,16 +30,17 @@ public class FavoritesService {
     repository.save(entity);
   }
 
-  // 同じハッシュ値になるようなレコードが存在するかを判定
+  // 同じuserIdで、同じハッシュ値になるようなレコードが存在するかを判定
   public boolean existsByUserIdAndObjectHash(FavoritesRequestDTO dto) {
     String userId = dto.getUserId();
     String hash = generateHash(dto);
     boolean isExist = repository.existsByUserIdAndHash(userId, hash);
+    /*
     if(isExist){
       System.out.println(dto.getMenuName() + "は存在します！");
     }else{
       System.out.println(dto.getMenuName() + "は存在しません");
-    }
+    }*/
     return isExist;
   }
 

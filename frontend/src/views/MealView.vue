@@ -2,6 +2,11 @@
 import { ref, onMounted, inject } from 'vue'
 import axios from "axios"
 
+// ユーザー情報の取得
+import { useUserStore } from 'C:\\Users\\81809\\Desktop\\demo\\frontend\\src\\stores\\users.js'
+const userStore = useUserStore()
+const userId = userStore.userId
+
 const keywords = ref([
   { id: 1, text: '時短で料理'},
   { id: 2, text: '高たんぱく'},
@@ -56,7 +61,6 @@ const sendMessage = async (keyWord) => {
 
   // geminiに質問する版
   const reply = await geminiApi(keyWord)
-  console.log(reply)
   messages.value.push({
     role: "assistant",
     text: reply.text,
@@ -147,6 +151,7 @@ const openFullScreen = inject('openFullScreen')
               @click="openFullScreen(
                 'mealDetail', 
                 {
+                  userId : userId,
                   ...meal,
                   ...findById(meal.selectedId)
                 })"

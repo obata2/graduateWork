@@ -2,7 +2,7 @@ package com.gwork.demo.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
 
-import com.gwork.demo.Service.FavoritesService;
+import com.gwork.demo.Service.favorites.FavoritesService;
 import com.gwork.demo.dto.FavoritesRequestDTO;
 
 import org.springframework.web.bind.annotation.PostMapping;

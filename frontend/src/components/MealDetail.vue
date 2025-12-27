@@ -15,8 +15,6 @@ const props = defineProps({
 onMounted( async () => {
   const res = await axios.post(`http://localhost:50000/psqlFavorites/exist`, props.data)
   isExist.value = res.data    // 存在する→true, 存在しない→false
-  console.log(props)
-  console.log(isExist.value)
   // eslint-disable-next-line no-debugger
   debugger
 })

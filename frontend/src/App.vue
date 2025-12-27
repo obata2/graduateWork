@@ -9,7 +9,7 @@ import MealView_discard from './views/MealView_discard.vue'
 
 import MealDetail from './components/MealDetail.vue'
 
-const activeTab = ref('meal')  // ← 状態は親に持たせる
+const activeTab = ref('data')  // ← 状態は親に持たせる
 // タブに応じて表示するコンポーネントを返す computed
 const activeTabComponent = computed(() => {
   switch (activeTab.value) {

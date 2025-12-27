@@ -2,6 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
+/* 献立詳細に遷移するときに、右からスライドしてくるアニメーション */
 @layer utilities {
   .slide-left-enter-from { @apply translate-x-full; }
   .slide-left-enter-to { @apply translate-x-0; }
@@ -9,4 +10,26 @@
   .slide-left-leave-from { @apply translate-x-0; }
   .slide-left-leave-to { @apply translate-x-full; }
   .slide-left-leave-active { @apply transition-transform duration-300 ease-in; }
+}
+
+/* 食材価格表を編集するモードのときの、セルの背景が点滅するアニメーション */
+@keyframes blink {
+  0%   { background-color: #fff; }
+  50%  { background-color: #deffe2; }
+  100% { background-color: #fff; }
+}
+
+.blink-bg {
+  animation: blink 2.0s infinite;
+}
+
+/* input(type:number)の、値を増減させるボタンを無くす */
+.no-spin::-webkit-inner-spin-button,
+.no-spin::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.no-spin {
+  -moz-appearance: textfield;
 }

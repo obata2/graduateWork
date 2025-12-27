@@ -16,47 +16,27 @@ public class NutrientService {
   private static Workbook workbook_sAndP;
   private static Workbook workbook_veg;
   private static Workbook workbook_targets;
-  
-  /*
-  public static double[] priceUnitOfVeg;
-  public static String[] vegName;
-  public static double[] staVolOfVeg;
-  public static double[][] vegNutrientTable;
-  public static String[] vegId;
-
-  public static double[] priceUnitOfSAndP;
-  public static String[] sAndPName;
-  public static double[] staVolOfSAndP;
-  public static double[][] sAndPNutrientTable;
-  public static String[] sAndPId;
-  */
 
   //[0]→主食・肉類      [1]→野菜類
-  public static double[][] priceUnitQtyForILP = new double[2][];
+  public static double[][] priceUnitQtyForILP = new double[2][];    // 価格統計の単位となる重量
   public static String[][] priceUnitQtyForView = new String[2][];
   public static String[][] name = new String[2][];
-  public static double[][] standardQty = new double[2][];
+  public static double[][] standardQty = new double[2][];           // 1食分の標準的な重量
   public static double[][][] nutrientTable = new double[2][][];
   public static String[][] id = new String[2][];
 
   public static double[] targets;
+
+  // priceLatestテーブルの初期保存に使うための変数
+  //public static LinkedHashMap<String, String> idAndName = new LinkedHashMap<>();        //お肉の部位をある部位に代表させた、{食材名:id}
+  //public static LinkedHashMap<String, String> idAndPriceUnitQty = new LinkedHashMap<>();   //価格が何g単位かを示す辞書
 
   static {
     readNutrientTable();
     processSAndPTable();
     processVegTable();
     processTargets();
-
-
-    /* 
-    sAndPNutrientTable = getSAndPNutrientTable();
-    vegNutrientTable = getVegNutrientTable();
-    staVolOfSAndP = getStaVolOfSAndP();
-    staVolOfVeg = getStaVolOfVeg();
-    targets = getTargets();
-    priceUnitOfVeg = getPriceUnitOfVeg();
-    priceUnitOfSAndP = getPriceUnitOfSAndP();
-    */
+    //setIdMap();
   }
 
 
@@ -177,7 +157,7 @@ public class NutrientService {
   }
 
   // --- 目標値のデータを取り出す ---
-  public static void processTargets() {
+  private static void processTargets() {
     try {
       Sheet sheet = workbook_targets.getSheetAt(0);
       targets = new double[14]; // 14種類の摂取目標値
@@ -194,140 +174,21 @@ public class NutrientService {
     }
   }
 
-
-  /* 
-  // ---主食・肉類の栄養テーブルを返す ---
-  public static double[][] getSAndPNutrientTable() {
-    // System.out.println("主食・肉類の栄養素テーブル：");
-    try {
-      Sheet sheet = workbook_sAndP.getSheetAt(0);
-      int startRowIndex = 3; // "うるち米(コシヒカリ)"の行から
-      int lastRowIndex = sheet.getLastRowNum(); // "鶏肉(ひき肉)"の行まで (0-indexed)
-      int startColIndex = 4; // "タンパク質"の列から
-      int lastColIndex = sheet.getRow(startRowIndex).getLastCellNum() - 1; // "ci-0.65ti"の列まで (0-indexed)
-      double[][] sAndPNutrientTable = new double[(lastRowIndex + 1) - 3][(lastColIndex + 1) - 4]; // 3行分、4列分の栄養素データではない部分を除外したサイズ
-      for (int i = startRowIndex; i <= lastRowIndex; i++) {
-        Row row = sheet.getRow(i);
-        for (int j = startColIndex; j <= lastColIndex; j++) {
-          Cell cell = row.getCell(j);
-          sAndPNutrientTable[i - startRowIndex][j - startColIndex] = cell.getNumericCellValue();
+/*
+  private static void setIdMap () {
+    ArrayList<String> used = new ArrayList<>();
+    //主食・肉類と、野菜類の2パターン
+    for(int i=0; i<id.length; i++){
+      for(int j=0; j<id[i].length; j++){
+        String id_str = id[i][j];
+        String name_str = name[i][j];
+        String priceUnit = priceUnitQtyForView[i][j];
+        if(!used.contains(id_str)){
+          idAndName.put(id_str, name_str);
+          idAndPriceUnitQty.put(id_str, priceUnit);
+          used.add(id_str);
         }
-        // System.out.println(Arrays.toString(sAndPNutrientTable[i -
-        // startRowIndex]));
       }
-      return sAndPNutrientTable;
-    } catch (Exception e) {
-      e.printStackTrace();
-      return null;
-    }
-  }
-
-  // ---主食・肉類の1食分の目安量を返す ---
-  public static double[] getStaVolOfSAndP() {
-    try {
-      Sheet sheet = workbook_sAndP.getSheetAt(0);
-      int startRowIndex = 3; // "うるち米(コシヒカリ)"の行から
-      int lastRowIndex = sheet.getLastRowNum(); // "鶏肉(ひき肉)"の行まで (0-indexed)
-      int colIndex = 3; // "1食分の目安量"の列
-      double[] staVolOfSAndP = new double[(lastRowIndex + 1) - 3]; // 3行分の余計な部分を除外したサイズ
-      for (int i = startRowIndex; i <= lastRowIndex; i++) {
-        Row row = sheet.getRow(i);
-        Cell cell = row.getCell(colIndex);
-        staVolOfSAndP[i - startRowIndex] = cell.getNumericCellValue();
-      }
-      // System.out.println("主食・肉類1食分の目安量：" + Arrays.toString(staVolOfSAndP));
-      return staVolOfSAndP;
-    } catch (Exception e) {
-      e.printStackTrace();
-      return null;
-    }
-  }
-
-  // --- 主食・肉類に関して、価格が何グラム単位かを示す辞書を返す ---
-  public static Map<String, Double> getPriceUnitOfSAndP() {
-    Map<String, Double> priceUnit = new LinkedHashMap<>();
-    try {
-      Sheet sheet = workbook_sAndP.getSheetAt(0);
-      int startRowIndex = 3; // "うるち米(コシヒカリ)"の行から
-      int lastRowIndex = sheet.getLastRowNum(); // "鶏肉(ひき肉)"の行まで  (0-indexed)
-      int nameColIndex = 2; // "食品名"の列
-      int priUniColIndex = 1; // "価格の単位"の列
-      for (int i = startRowIndex; i <= lastRowIndex; i++) {
-        Row row = sheet.getRow(i);
-        priceUnit.put(row.getCell(nameColIndex).getStringCellValue(), row.getCell(priUniColIndex).getNumericCellValue());
-      }
-      // System.out.println("価格の単位をまとめた辞書：" + priceUnit);
-      return priceUnit;
-    } catch (Exception e) {
-      e.printStackTrace();
-      return null;
-    }
-  }
-
-  // --- 野菜類の栄養テーブルを返す ---
-  public static double[][] getVegNutrientTable() {
-    // System.out.println("野菜類の栄養素テーブル：");
-    try {
-      Sheet sheet = workbook_veg.getSheetAt(0);
-      int startRowIndex = 3; // "牛乳(店頭売り、紙容器入り)"の行から
-      int lastRowIndex = sheet.getLastRowNum(); // "こんにゃく"の行まで (0-indexed)
-      int startColIndex = 4; // "たんぱく質"の列から
-      int lastColIndex = sheet.getRow(startRowIndex).getLastCellNum() - 1; // "ci-0.65ti"の列まで (0-indexed)
-      double[][] vegNutrientTable = new double[(lastRowIndex + 1) - 3][(lastColIndex + 1) - 4]; // 3行分、4列分の栄養素データではない部分を除外したサイズ
-      for (int i = startRowIndex; i <= lastRowIndex; i++) {
-        Row row = sheet.getRow(i);
-        for (int j = startColIndex; j <= lastColIndex; j++) {
-          Cell cell = row.getCell(j);
-          vegNutrientTable[i - startRowIndex][j - startColIndex] = cell.getNumericCellValue();
-        }
-        // System.out.println(Arrays.toString(vegetable[i - startRowIndex]));
-      }
-      return vegNutrientTable;
-    } catch (Exception e) {
-      e.printStackTrace();
-      return null;
-    }
-  }
-
-  // --- 野菜類に関して、価格が何グラム単位かを示す辞書を返す ---
-  public static Map<String, Double> getPriceUnitOfVeg() {
-    Map<String, Double> priceUnit = new LinkedHashMap<>();
-    try {
-      Sheet sheet = workbook_veg.getSheetAt(0);
-      int startRowIndex = 3; // "牛乳(店頭売り、紙容器入り)"の行から
-      int lastRowIndex = sheet.getLastRowNum(); // "こんにゃく"の行まで (0-indexed)
-      int nameColIndex = 2; // "食品名"の列
-      int priUniColIndex = 1; // "価格の単位"の列
-      for (int i = startRowIndex; i <= lastRowIndex; i++) {
-        Row row = sheet.getRow(i);
-        priceUnit.put(row.getCell(nameColIndex).getStringCellValue(), row.getCell(priUniColIndex).getNumericCellValue());
-      }
-      // System.out.println("価格の単位をまとめた辞書：" + priceUnit);
-      return priceUnit;
-    } catch (Exception e) {
-      e.printStackTrace();
-      return null;
-    }
-  }
-
-  // --- 野菜類の1食分の目安量を返す ---
-  public static double[] getStaVolOfVeg() {
-    try {
-      Sheet sheet = workbook_veg.getSheetAt(0);
-      int startRowIndex = 3; // "牛乳(店頭売り、紙容器入り)"の行から
-      int lastRowIndex = sheet.getLastRowNum(); // "こんにゃく"の行まで (0-indexed)
-      int staVolColIndex = 3; // "1食分の目安量"の列
-      double[] staVolOfVeg = new double[(lastRowIndex + 1) - 3]; // 3行分の余計な部分を除外したサイズ
-      for (int i = startRowIndex; i <= lastRowIndex; i++) {
-        Row row = sheet.getRow(i);
-        Cell cell = row.getCell(staVolColIndex);
-        staVolOfVeg[i - startRowIndex] = cell.getNumericCellValue();
-      }
-      // System.out.println("野菜類1食分の目安量：" + Arrays.toString(staVolOfVeg));
-      return staVolOfVeg;
-    } catch (Exception e) {
-      e.printStackTrace();
-      return null;
     }
   }*/
 }
