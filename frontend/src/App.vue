@@ -4,18 +4,18 @@ import AppHeader from './components/AppHeader.vue'
 import AppFooter from './components/AppFooter.vue'
 import DataView from './views/DataView.vue'
 import MealView from './views/MealView.vue'
-import MealView_discard from './views/MealView_discard.vue'
-//import FavoriteView from './views/FavoriteView.vue'
+//import MealView_discard from './views/MealView_discard.vue'
+import FavoriteView from './views/FavoriteView.vue'
 
 import MealDetail from './components/MealDetail.vue'
 
-const activeTab = ref('data')  // ← 状態は親に持たせる
+const activeTab = ref('favorite')  // ← 状態は親に持たせる
 // タブに応じて表示するコンポーネントを返す computed
 const activeTabComponent = computed(() => {
   switch (activeTab.value) {
     case 'data': return DataView
     case 'meal': return MealView
-    case 'favorite': return MealView_discard
+    case 'favorite': return FavoriteView
     default: return MealView
   }
 })

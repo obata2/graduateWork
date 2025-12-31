@@ -14,11 +14,10 @@ import com.gwork.demo.model.PricesLatest;
 
 public interface PricesLatestRepository extends JpaRepository<PricesLatest, PricesLatestId> {
   @Modifying
-  @Transactional
   @Query(value = """
       INSERT INTO prices_latest (user_id, ingredient_id, ingredient_name, price_latest, price_unit_qty)
       VALUES (:userId, :ingredientId, :ingredientName, :priceLatest, :priceUnitQty)
-      ON CONFLICT (user_Id, ingredient_Id) DO UPDATE SET 
+      ON CONFLICT (user_Id, ingredient_Id) DO UPDATE SET
       price_latest = EXCLUDED.price_latest
       WHERE prices_latest.is_fixed = false
       """, nativeQuery = true)
@@ -29,17 +28,48 @@ public interface PricesLatestRepository extends JpaRepository<PricesLatest, Pric
       @Param("priceLatest") Integer priceLatest,
       @Param("priceUnitQty") String priceUnitQty);
 
-    // テーブル結合した結果のレコードをDTOとしてリストに格納
-    @Query("""
-      SELECT new com.gwork.demo.dto.PriceLatestRowDTO(
-        pl.ingredientId,
-        pl.isFixed,
-        mi.ingredientName,
-        pl.priceLatest,
-        mi.priceUnitQty
-      )
-      FROM PricesLatest pl
-      JOIN pl.mIngredients mi 
-    """)
-    List<PriceLatestRowDTO> findOrderRows();
+  // テーブル結合した結果のレコードをDTOとして、それらをリストに格納
+  @Query("""
+        SELECT new com.gwork.demo.dto.PriceLatestRowDTO(
+          pl.userId,
+          pl.ingredientId,
+          pl.isFixed,
+          mi.ingredientName,
+          pl.priceLatest,
+          mi.priceUnitQty
+        )
+        FROM PricesLatest pl
+        JOIN pl.mIngredients mi
+        ORDER BY CAST(pl.ingredientId AS integer) ASC
+      """)
+  List<PriceLatestRowDTO> findOrderRows();
+
+  // 最新の統計情報に更新する
+  @Modifying
+  @Query("""
+        update PricesLatest pl
+           set pl.priceLatest = :priceLatest
+         where pl.userId = :userId
+           and pl.ingredientId = :ingredientId
+           and pl.isFixed = false
+      """)
+  void updateLatest(
+      @Param("userId") String userId,
+      @Param("ingredientId") String ingredientId,
+      @Param("priceLatest") Integer priceLatest);
+
+  // ユーザーが編集した情報でテーブルを更新する
+  @Modifying
+  @Query("""
+        update PricesLatest pl
+           set pl.isFixed = :isFixed,
+               pl.priceLatest = :priceLatest
+         where pl.userId = :userId
+           and pl.ingredientId = :ingredientId
+      """)
+  void saveEdits(
+      @Param("userId") String userId,
+      @Param("ingredientId") String ingredientId,
+      @Param("isFixed") Boolean isFixed,
+      @Param("priceLatest") Integer priceLatest);
 }

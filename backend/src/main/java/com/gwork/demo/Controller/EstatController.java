@@ -37,20 +37,35 @@ public class EstatController {
       estatService.savePricesLatest("admin");
     }*/
 
-    // --- prices_latestテーブルの全レコードを取得 ---
+    // prices_latestテーブルの全レコードを取得(価格一覧表の表示用)
     @GetMapping("/findAll")
     public List<PriceLatestRowDTO> findAll () {
         return estatService.finadAll(); 
     }
 
-    // --- APIを叩いて価格統計を取得 ---
-    @PostMapping("fetch")
-    public PriceStatDTO postMethodName(@RequestBody Map<String, String> body) {
-    String cdArea = body.get("cdArea");
-        return estatService.fetchPriceStat(cdArea);
+    // prices_latestテーブルを、eStatの最新情報に更新する(価格一覧表の更新用)
+    @PostMapping("/updateLatest")
+      public void updateLatest(@RequestBody Map<String, String> body) {
+      String cdArea = body.get("cdArea");
+      String userId = body.get("userId");
+      estatService.updateLatest(cdArea, userId);
     }
 
-    // --- APIパラメータの用意 ---
+    // prices_latestテーブルを、ユーザーが編集した情報で更新する(価格一覧表の編集用)
+    @PostMapping("/saveEdits")
+    public void saveEdits(@RequestBody List<PriceLatestRowDTO> req) {
+      estatService.saveEdits(req);
+    }
+    
+
+    // APIを叩いて価格統計を取得(推移グラフの表示用)
+    @PostMapping("fetch")
+    public PriceStatDTO postMethodName(@RequestBody Map<String, String> body) {
+      String cdArea = body.get("cdArea");
+      return estatService.fetchPriceStat(cdArea);
+    }
+
+    // APIパラメータの用意
     @GetMapping("/apiParams")
     public EstatAPIParamDTO getAPIParams() {
       return estatService.getAPIParams();

@@ -4,33 +4,38 @@ package com.gwork.demo.Service.estat;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.gwork.demo.Service.filter.IngredientNameFilterService;
 import com.gwork.demo.Service.nutrient.NutrientService;
 import com.gwork.demo.dto.EstatAPIParamDTO;
 import com.gwork.demo.dto.PriceLatestRowDTO;
+import com.gwork.demo.dto.PriceLatestEditReqDTO;
 import com.gwork.demo.dto.PriceStatDTO;
 import com.gwork.demo.model.PricesLatest;
 import com.gwork.demo.repository.PricesLatestRepository;
 
+import jakarta.transaction.Transactional;
+
 @Service
+@Transactional
 public class EstatService {
 
   private final EstatClientService estatClientService;
   private final PriceStatTransoformService priceStatTransoformService;
   private final MetaDataTransformService metaDataTransformService;
-  private final PricesLatestRepository repository;
+  private final PricesLatestRepository pricesLatestRepository;
 
   // コンストラクタインジェクションでTransformのインスタンスを受け取る
   public EstatService(EstatClientService estatClientService, PriceStatTransoformService priceStatTransoformService, MetaDataTransformService metaDataTransformService, PricesLatestRepository repository) {
     this.estatClientService = estatClientService;
     this.priceStatTransoformService = priceStatTransoformService;
     this.metaDataTransformService = metaDataTransformService;
-    this.repository = repository;
+    this.pricesLatestRepository = repository;
   }
   
   /*
@@ -55,9 +60,28 @@ public class EstatService {
     return priceStatDTO;
   }
 
+  //        〃               、prices_latestテーブルを更新する
+  public void updateLatest (String cdArea, String userId) {
+    JsonNode jsonNode = estatClientService.fetchPriceStat(cdArea);
+    PriceStatDTO priceStatDTO = priceStatTransoformService.transform(jsonNode);
+    for (Map.Entry<String, Integer> entry : priceStatDTO.getPriceLatest().entrySet()) {
+      pricesLatestRepository.updateLatest(userId, entry.getKey(), entry.getValue());
+    }
+  }
+
+  // ユーザーの編集した情報を受け取り、prices_latestテーブルを更新する
+  public void saveEdits (List<PriceLatestRowDTO> req) {
+    for(PriceLatestRowDTO editedRow : req) {
+      PriceLatestEditReqDTO editReq = new PriceLatestEditReqDTO();
+      BeanUtils.copyProperties(editedRow, editReq);
+      pricesLatestRepository.saveEdits(editReq.getUserId(), editReq.getIngredientId(), editReq.getIsFixed(), editReq.getPriceLatest());
+      System.out.println("レコードを更新するよ");
+    }
+  }
+
   // prices_latestテーブルの全レコードを取得する
   public List<PriceLatestRowDTO> finadAll () {
-    return repository.findOrderRows();
+    return pricesLatestRepository.findOrderRows();
   }
 
 
@@ -65,9 +89,5 @@ public class EstatService {
   // APIパラメータの確認
   public EstatAPIParamDTO getAPIParams () {
     return metaDataTransformService.transform();
-  }
-
-  public JsonNode test () {
-    return estatClientService.fetchPriceStat("23100");
   }
 }

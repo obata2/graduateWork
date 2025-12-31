@@ -3,6 +3,8 @@ package com.gwork.demo.Service.favorites;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.List;
+import java.util.TreeMap;
 
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,13 +37,19 @@ public class FavoritesService {
     String userId = dto.getUserId();
     String hash = generateHash(dto);
     boolean isExist = repository.existsByUserIdAndHash(userId, hash);
-    /*
+    
     if(isExist){
       System.out.println(dto.getMenuName() + "は存在します！");
     }else{
+      System.out.println("hash : " + hash);
       System.out.println(dto.getMenuName() + "は存在しません");
-    }*/
+    }
     return isExist;
+  }
+
+  // テーブルから全件取得
+  public List<Favorites> findAll () {
+    return repository.findAll();
   }
 
   // ハッシュ値生成
@@ -49,10 +57,12 @@ public class FavoritesService {
     try {
       MessageDigest digest = MessageDigest.getInstance("SHA-256");
 
+      // jsonb型ではmapの辞書順が統一されないので、ここでソートしておく
+      TreeMap<String, Object> sortedDishName = new TreeMap<>(dto.getDishName());
       // ハッシュ対象フィールドを明示的に連結
       String source =
           dto.getMenuName() + "|" +
-          dto.getDishName();
+          sortedDishName;
 
       byte[] hashBytes = digest.digest(source.getBytes(StandardCharsets.UTF_8));
 

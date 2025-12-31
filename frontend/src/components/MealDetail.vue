@@ -12,7 +12,7 @@ const props = defineProps({
   data: Object
 })
 
-onMounted( async () => {
+onMounted(async () => {
   const res = await axios.post(`http://localhost:50000/psqlFavorites/exist`, props.data)
   isExist.value = res.data    // 存在する→true, 存在しない→false
   // eslint-disable-next-line no-debugger
@@ -138,42 +138,51 @@ const save = async (data) => {
     </div>
 
     <!-- フッター -->
-    <footer class="sticky bottom-0 flex justify-between items-center h-24 gap-3 bg-white border-t">
-      <div
-        class="sticky flex bottom-20 left-0 right-0 pt-2 px-4 grow gap-3 bg-gradient-to-t from-white via-white/100 to-transparent">
-        <!-- お気に入り登録ボタン -->
-        <div v-if="!isExist">
-          <div class="flex p-3 gap-4 grow rounded-full justify-center bg-orange-400">
-            <span class="material-symbols-outlined text-white">favorite</span>
-            <button class="text-white font-medium"
-              @click = "() => {
-                save(props.data);
-                nextTick(() => openModal('registered'))
-              }">お気に入りに登録</button>
-          </div>
-        </div>
-        <div v-else>
-          <div class="flex p-3 gap-4 grow rounded-full justify-center bg-orange-400">
-            <span class="material-symbols-outlined text-white">favorite</span>
-            <button class="text-white font-medium">登録済みです！</button>
-          </div>
-        </div>
-        <!-- 栄養グラフ描画ボタン -->
-        <button @click="() => {
-          openModal('graph');
-          nextTick(() => openGraph(props.data.nutrientsContriRate, props.data.pfcContriRate));
-        }"><!-- openModalでモーダルが表示された後、openGraphでデータが書き換わりグラフ描画がされる -->
-          <span class="material-symbols-outlined flex items-center justify-center rounded-full w-12 h-12 text-2xl text-white bg-orange-400">bar_chart_4_bars</span>
+    <footer class="sticky bottom-0 h-24 w-full gap-3 bg-white border-t">
+      <div class="sticky bottom-20 left-0 right-0 flex gap-3 px-4 pt-2">
+        <!-- お気に入り登録 -->
+        <button v-if="!isExist"
+          class="flex flex-1 items-center justify-center gap-4 rounded-full bg-orange-400 p-3 text-white font-medium"
+          @click="() => {
+            save(props.data)
+            nextTick(() => openModal('registered'))
+          }">
+          <span class="material-symbols-outlined">favorite</span>
+          お気に入りに登録
         </button>
-        <!-- メモボタン -->
-        <span class="material-symbols-outlined flex items-center justify-center rounded-full w-12 h-12 text-2xl text-white bg-orange-400">edit_note</span>
+
+        <div v-else
+          class="flex flex-1 items-center justify-center gap-4 rounded-full bg-orange-400 p-3 text-white font-medium">
+          <span class="material-symbols-outlined">favorite</span>
+          登録済みです！
+        </div>
+
+        <!-- 栄養グラフ -->
+        <button @click="() => {
+          openModal('graph')
+          nextTick(() => openGraph(props.data.nutrientsContriRate, props.data.pfcContriRate))
+        }" class="flex items-center justify-center w-12 h-12 rounded-full bg-orange-400 text-white text-2xl">
+          <span class="material-symbols-outlined">bar_chart_4_bars</span>
+        </button>
+
+        <!-- メモ -->
+        <span
+          class="material-symbols-outlined flex items-center justify-center w-12 h-12 rounded-full bg-orange-400 text-white text-2xl">
+          edit_note
+        </span>
       </div>
     </footer>
 
     <!-- ↓モーダルウィンドウで表示するやつ -->
     <!-- お気に入り登録後のポップアップ -->
-    <ModalSquare :show="activeModal === 'registered'" width="60%" @close="closeModal">
-      <p>登録しました！</p>
+    <ModalSquare :show="activeModal === 'registered'" width="90%" @close="closeModal">
+      <div class="flex flex-col items-center text-center gap-6">
+        <span
+          class="material-symbols-outlined flex items-center justify-center w-12 h-12 rounded-full text-4xl text-green-600 bg-green-100">check</span>
+        <p class="text-lg font-bold">登録しました!</p>
+        <p class="text-sm text-gray-600">お気に入りタブから、いつでも確認・削除できます</p>
+        <button class="w-full p-3 bg-green-600 text-white rounded-full" @click="closeModal">閉じる</button>
+      </div>
     </ModalSquare>
     <!-- 寄与率のグラフ描画 -->
     <ModalSquare :show="activeModal === 'graph'" width="100%" height="70%" @close="closeModal">

@@ -4,6 +4,7 @@ import axios from "axios";
 
 import PriceLatestTable from '../components/PriceLatestTable.vue';
 import PriceTransitionGraph from '../components/PriceTransitionGraph.vue';
+import ModalSquare from "C:\\Users\\81809\\Desktop\\demo\\frontend\\src\\components\\ModalSquare.vue";
 
 // 上部のタブ切り替え用
 const tabs = [
@@ -48,7 +49,14 @@ onMounted(async () => {
   await setAPIParams();
 })
 
-// 表を最新情報に更新する
+// DBを最新情報に更新し、さらにDBからデータを再取得する
+const updateLatest = async () => {
+  await axios.post("http://localhost:50000/estat/updateLatest", {
+    cdArea: areaParamMap.value["名古屋市"],
+    userId: "admin"
+  });
+  await setTableData();
+}
 
 // 表の編集を開始・キャンセルした時の挙動   (表作成コンポーネントに送るデータをoriginalのコピーにする)  
 const startEdit = () => {
@@ -59,11 +67,23 @@ const cancelEdit = () => {
   editedTableData.value = structuredClone(originalTableData.value)
   isEditMode.value = false
 }
-// 表の編集を完了した際に、DBの保存処理を行う
-const completeEdit = () => {
+
+// 表の編集を完了した際に、DBの保存処理を行い、さらにDBからデータを再取得する
+const saveEdits = async () => {
+  await axios.post("http://localhost:50000/estat/saveEdits", editedTableData.value);
   console.log(editedTableData)
   isEditMode.value = false
+  await setTableData();
 }
+
+// --- モーダルの表示まわり ---
+const activeModal = ref(null); // 'beforeUpdate' | 'afterUpdate' | 'beforeEdit' | 'afterEdit' | null      <ModalSquare :show="activeModal === '○○'"に引っかかることで任意のモーダルを呼び出す  
+const openModal = (name) => {
+  activeModal.value = name;
+};
+const closeModal = () => {
+  activeModal.value = null;         //<ModalSquare :show="activeModal === '○○'" のいずれにも引っかからなくなる
+};
 
 // 「グラフを描画」ボタンを押したときに、コンポーネントに渡すデータを整えて、描画まで行う
 const chartRef = ref(null);
@@ -115,7 +135,7 @@ const renderChart = async () => {
 
 <template>
   <!-- データタブのメインコンテンツ -->
-  <div class="flex flex-col flex-1 w-full">
+  <div class="w-full flex flex-col flex-1">
     <!-- 上部のタブ切り替え(共通) -->
     <div class="flex sticky top-20 mt-4 border-b bg-white">
       <button v-for="tab in tabs" :key="tab.id" @click="activeTab = tab.id"
@@ -132,39 +152,88 @@ const renderChart = async () => {
 
     <!-- タブ切り替えより下側 -->
     <div class="flex-1 px-4 pt-12 sm:px-5">
-    <!-- 一覧表タブの中身 -->
+      <!-- 一覧表タブの中身 -->
       <div v-show="activeTab === 'tab1'">
-        <PriceLatestTable :data="isEditMode ? editedTableData : originalTableData" :isEditMode="isEditMode"></PriceLatestTable>
+        <h2 class="pb-1 font-semibold">
+          食材価格表
+        </h2>
+        <div class="pb-6 text-sm text-gray-600">
+          この表のデータを使用して、最適解が計算されます
+        </div>
+        <!-- 表本体 -->
+        <PriceLatestTable :data="isEditMode ? editedTableData : originalTableData" :isEditMode="isEditMode">
+        </PriceLatestTable>
         <!-- 更新ボタンと、手入力ボタン -->
-        <div
-          class="sticky bottom-20 px-4 pt-4 mt-8 -mx-4 bg-white shadow-[0_-0.125rem_0.25rem_-0_rgba(0,0,0,0.1)]">
+        <div class="sticky bottom-20 px-4 pt-4 mt-8 -mx-4 bg-white shadow-[0_-0.125rem_0.25rem_-0_rgba(0,0,0,0.1)]">
           <!-- 編集モードではないとき -->
           <div v-if="!isEditMode" class="flex gap-3">
-            <button class="flex w-full p-3 gap-2 justify-center border border-green-600 rounded-md">
+            <button class="flex w-full p-3 gap-2 justify-center border border-green-600 rounded-md"
+              @click="openModal('beforeUpdate')">
               <span class="material-symbols-outlined text-green-600">cached</span>
-              <p class="font-medium text-green-600">最新情報を取得</p>
+              <p class="font-medium text-green-600">最新情報に更新</p>
             </button>
-            <button class="flex w-full p-3 gap-2 justify-center bg-green-600 text-title-medium font-medium rounded-md" @click=startEdit>
+            <button class="flex w-full p-3 gap-2 justify-center bg-green-600 text-title-medium font-medium rounded-md"
+              @click=startEdit>
               <span class="material-symbols-outlined text-white">edit_square</span>
               <p class="font-medium text-white">表を編集</p>
             </button>
           </div>
           <!-- 編集モードのとき -->
           <div v-else class="flex gap-3">
-            <button class="flex p-3 gap-2 justify-center border border-red-600 rounded-full" @click=cancelEdit>
-              <span class="material-symbols-outlined text-red-600">close</span>
-              <p class="font-medium text-red-600">キャンセル</p>
+            <button class="flex p-3 gap-2 justify-center border border-gray-600 rounded-full" @click=cancelEdit>
+              <span class="material-symbols-outlined text-gray-600">close</span>
+              <p class="font-medium text-gray-600">キャンセル</p>
             </button>
-            <button class="flex grow p-3 gap-2 justify-center bg-green-600 text-title-medium font-medium rounded-full" @click=completeEdit>
+            <button class="flex grow p-3 gap-2 justify-center bg-green-600 text-title-medium font-medium rounded-full"
+              @click="() => {
+                saveEdits();
+                nextTick(() => openModal('afterEdit'));
+              }">
               <span class="material-symbols-outlined text-white">check</span>
-              <p class="font-medium text-white">完了</p>
+              <p class="font-medium text-white">保存</p>
             </button>
           </div>
         </div>
+        <!-- 更新・編集を行う際のポップアップ(モーダル) -->
+        <ModalSquare :show="activeModal === 'beforeUpdate'" width="80%" @close="closeModal">
+          <div class="flex flex-col items-center text-center gap-6">
+            <span
+              class="material-symbols-outlined flex items-center justify-center w-12 h-12 rounded-full text-4xl text-yellow-600 bg-yellow-100">exclamation</span>
+            <p class="text-sm">
+              <span class="font-bold">固定</span>のチェックボックスが OFF になっている食材は、この処理によって<span
+                class="font-bold text-red-500 underline">価格が上書き</span>されます。<br><br>
+              <span class="text-base font-bold">更新してもよろしいですか？</span>
+            </p>
+            <div class="flex w-full gap-4">
+              <button class="flex-1 p-2 border border-gray-600 text-gray-600 rounded-full"
+                @click=closeModal>キャンセル</button>
+              <button class="flex-1 p-2 bg-green-600 text-white rounded-full" @click="() => {
+                updateLatest();
+                nextTick(() => openModal('afterUpdate'));
+              }">OK</button>
+            </div>
+          </div>
+        </ModalSquare>
+        <ModalSquare :show="activeModal === 'afterUpdate'" width="80%" @close="closeModal">
+          <div class="flex flex-col items-center text-center gap-6">
+            <span
+              class="material-symbols-outlined flex items-center justify-center w-12 h-12 rounded-full text-4xl text-green-600 bg-green-100">check</span>
+            <p class="text-lg font-bold">更新が完了しました!</p>
+            <button class="w-full p-3 bg-green-600 text-white rounded-full" @click="closeModal">閉じる</button>
+          </div>
+        </ModalSquare>
+        <ModalSquare :show="activeModal === 'afterEdit'" width="80%" @close="closeModal">
+          <div class="flex flex-col items-center text-center gap-6">
+            <span
+              class="material-symbols-outlined flex items-center justify-center w-12 h-12 rounded-full text-4xl text-green-600 bg-green-100">check</span>
+            <p class="text-lg font-bold">保存しました!</p>
+            <button class="w-full p-3 bg-green-600 text-white rounded-full" @click="closeModal">閉じる</button>
+          </div>
+        </ModalSquare>
       </div>
 
 
-    <!-- 推移グラフタブの中身 -->
+      <!-- 推移グラフタブの中身 -->
       <div v-show="activeTab === 'tab2'">
         <!-- セレクトボックス -->
         <div class="grid grid-cols-10 gap-4">
@@ -199,7 +268,7 @@ const renderChart = async () => {
           @click="renderChart">グラフを描画</button>
 
         <!-- ローディング風のアニメーション -->
-        <div v-if="loading" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div v-if="loading" class="fixed inset-0 bg-green-600 bg-opacity-50 flex items-center justify-center z-50">
           <!-- Tailwindのスピナーアニメ -->
           <div class="flex space-x-2 items-center justify-center">
             <div class="w-4 h-4 bg-gray-50 rounded-full transform scale-75 animate-ping"></div>

@@ -109,7 +109,7 @@ const openFullScreen = inject('openFullScreen')
 
   <!-- レイアウト関係→それ自身のサイズ関係→文字のフォントや大きさ関係→背景・影関係→色関係→アニメーション・その他 -->
 
-  <div class="px-4 pt-12 sm:px-5 flex flex-col">
+  <div class="w-full px-4 pt-12 sm:px-5 flex flex-col">
     <!-- ヘッダー -->
     <h2 class="pb-6 font-semibold">
       キーワードをもとにして、AIが献立を生成します

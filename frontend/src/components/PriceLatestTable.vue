@@ -1,5 +1,5 @@
 <script setup>
-import { defineProps, onMounted, computed } from 'vue'
+import { defineProps, computed } from 'vue'
 
 
 const props = defineProps({
@@ -34,10 +34,6 @@ const onPriceBlur = (row) => {
   }
   prevPriceMap.delete(row)
 }
-
-onMounted(() =>
-  console.log(props)
-)
 </script>
 
 <template>
