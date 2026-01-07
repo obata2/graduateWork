@@ -4,8 +4,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.gwork.demo.Service.ilp.ILPResultDTO;
 import com.gwork.demo.Service.ilp.SortILPResult;
+import com.gwork.demo.dto.ILPResultDTO;
 
 import org.springframework.web.bind.annotation.GetMapping;
 

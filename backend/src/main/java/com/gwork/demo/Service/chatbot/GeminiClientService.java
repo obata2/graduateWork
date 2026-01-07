@@ -7,11 +7,18 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import jakarta.annotation.PostConstruct;
+
 @Service
 public class GeminiClientService {
   private final WebClient webClient;
 
-  public GeminiClientService(@Value("${GEMINI_API_KEY}") String apiKey) {
+  public GeminiClientService(@Value("${gemini.api.key}") String apiKey) {
+    System.out.println("API KEY = " + apiKey);
     this.webClient = WebClient.builder()
         .baseUrl("https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent")
         .defaultHeader("Content-Type", "application/json")
@@ -20,7 +27,8 @@ public class GeminiClientService {
   }
 
   // プロンプトをgeminiに渡し、レスポンスから回答内容の部分を取り出す
-  public String chat(String prompt) {
+  public JsonNode chat(String prompt) {
+    ObjectMapper objectMapper = new ObjectMapper();
     Map<String, Object> schema = difineSchema();
     // ↓の形式でリクエストを送る仕様にgemini側で定められているっぽい
     Map<String, Object> body = Map.of(
@@ -36,10 +44,14 @@ public class GeminiClientService {
           List<Object> parts = (List<Object>) content.get("parts");
           Map<String, Object> part0 = (Map<String, Object>) parts.get(0);
           String text = part0.get("text").toString();
-          text = text.replaceFirst("^```json\\s*", "").replaceFirst("```$", "");    // 前後の ```json と ``` を削除
-          return text;
-        })
-        .block();
+          text = text.replaceFirst("^```json\\s*", "").replaceFirst("```$", "");    // 前後の ```json と ``` があるなら削除しておく
+        try {
+          return objectMapper.readTree(text); // ← ここで JsonNode 化
+        } catch (JsonProcessingException e) {
+          throw new RuntimeException("JSON parse error", e);
+        }
+    })
+    .block();
   }
 
   // レスポンスの形式をこちらで指定する

@@ -1,10 +1,11 @@
 <script setup>
 import { onMounted, ref, nextTick } from 'vue';
-import axios from "axios";
 
 import PriceLatestTable from '../components/PriceLatestTable.vue';
 import PriceTransitionGraph from '../components/PriceTransitionGraph.vue';
 import ModalSquare from "C:\\Users\\81809\\Desktop\\demo\\frontend\\src\\components\\ModalSquare.vue";
+import { apiClient } from 'C:\\Users\\81809\\Desktop\\demo\\frontend\\src\\lib\\apiClient.js';
+
 
 // 上部のタブ切り替え用
 const tabs = [
@@ -18,7 +19,7 @@ const originalTableData = ref([])
 const editedTableData = ref([])
 const isEditMode = ref(false)      // 価格を手入力するモードかのフラグ
 const setTableData = async () => {
-  const tableDataRes = await axios.get(`http://localhost:50000/estat/findAll`);
+  const tableDataRes = await apiClient.get(`/estat/findAll`);
   originalTableData.value = tableDataRes.data;
 }
 
@@ -28,7 +29,7 @@ const ingredientName = ref()    // 選択状態にある、↑のkeyである食
 const priceUnitQtyMap = ref()   // 価格統計単位を示す辞書
 const priceUnitQty = ref()      // 選択状態にある食材の、価格統計単位   (タイトル用にグラフへ渡す)
 const setNameAndId = async () => {
-  const mapperRes = await axios.get(`http://localhost:50000/mapper/mIngredients`);
+  const mapperRes = await apiClient.get(`/mapper/mIngredients`);
   nameAndIdMap.value = mapperRes.data.nameAndId;
   priceUnitQtyMap.value = mapperRes.data.nameAndPriceUnitQty;
 }
@@ -37,7 +38,7 @@ const compCityName = ref()     // 選択状態にある、↑のkeyである都�
 const timeFromParamMap = ref()  // セレクトボックス(期間)用の辞書
 //const timeFromParam = ref()   // 選択状態にある、cdTimeFrom
 const setAPIParams = async () => {
-  const apiParamsRes = await axios.get(`http://localhost:50000/estat/apiParams`);
+  const apiParamsRes = await apiClient.get(`/estat/apiParams`);
   areaParamMap.value = apiParamsRes.data.areaParam;
   timeFromParamMap.value = apiParamsRes.data.timeFromParam;
 }
@@ -51,7 +52,7 @@ onMounted(async () => {
 
 // DBを最新情報に更新し、さらにDBからデータを再取得する
 const updateLatest = async () => {
-  await axios.post("http://localhost:50000/estat/updateLatest", {
+  await apiClient.post(`/estat/updateLatest`, {
     cdArea: areaParamMap.value["名古屋市"],
     userId: "admin"
   });
@@ -70,7 +71,7 @@ const cancelEdit = () => {
 
 // 表の編集を完了した際に、DBの保存処理を行い、さらにDBからデータを再取得する
 const saveEdits = async () => {
-  await axios.post("http://localhost:50000/estat/saveEdits", editedTableData.value);
+  await apiClient.post(`/estat/saveEdits`, editedTableData.value);
   console.log(editedTableData)
   isEditMode.value = false
   await setTableData();
@@ -100,7 +101,7 @@ const renderChart = async () => {
     timeTo: "2025000505",
     areaCode: areaParamMap.value["名古屋市"]
   };*/
-  const mainRes = await axios.post("http://localhost:50000/estat/fetch", {
+  const mainRes = await apiClient.post(`/estat/fetch`, {
     cdArea: areaParamMap.value["名古屋市"]
   });
   results.push({
@@ -115,7 +116,7 @@ const renderChart = async () => {
       timeTo: "2025000505",
       areaCode: areaParam.value[compCity.value]
     };*/
-    const compRes = await axios.post("http://localhost:50000/estat/fetch", {
+    const compRes = await apiClient.post(`/estat/fetch`, {
       cdArea: areaParamMap.value[compCityName.value]
     });
     results.push({
@@ -158,7 +159,7 @@ const renderChart = async () => {
           食材価格表
         </h2>
         <div class="pb-6 text-sm text-gray-600">
-          この表のデータを使用して、最適解が計算されます
+          この表のデータを使用して、食材の組み合わせが計算されます
         </div>
         <!-- 表本体 -->
         <PriceLatestTable :data="isEditMode ? editedTableData : originalTableData" :isEditMode="isEditMode">
@@ -264,7 +265,7 @@ const renderChart = async () => {
           </div>
         </div>
         <button
-          class="w-full px-6 py-2 mt-6 mb-12 bg-gradient-to-r from-green-300 to-teal-300 text-title-medium font-medium rounded"
+          class="w-full px-6 py-2 mt-6 mb-12 bg-green-600 text-white text-title-medium font-medium rounded"
           @click="renderChart">グラフを描画</button>
 
         <!-- ローディング風のアニメーション -->

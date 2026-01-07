@@ -1,6 +1,6 @@
 package com.gwork.demo.dto;
 
-// prices_latestとm_ingredientsを結合したDTO            userIdが無いのがアカン
+// prices_latestとm_ingredientsを結合したDTO
 public record PriceLatestRowDTO (
   String userId,
   String ingredientId,

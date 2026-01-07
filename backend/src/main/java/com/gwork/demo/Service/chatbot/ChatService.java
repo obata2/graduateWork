@@ -4,16 +4,22 @@ import java.util.List;
 
 import org.springframework.stereotype.Service;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.gwork.demo.Service.ilp.ILPResultDTO;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.gwork.demo.Service.ilp.ILPService;
 import com.gwork.demo.Service.ilp.SortILPResult;
+import com.gwork.demo.dto.ILPResultDTO;
 
 @Service
 public class ChatService {
-  private final GeminiClientService geminiClientService;
 
-  public ChatService(GeminiClientService geminiClientService){
+  private final GeminiClientService geminiClientService;
+  private final ILPService iLPService;
+  public ChatService(GeminiClientService geminiClientService, ILPService iLPService){
     this.geminiClientService = geminiClientService;
+    this.iLPService = iLPService;
   }
 
   // 動作確認用のチャット
@@ -22,11 +28,20 @@ public class ChatService {
   }
 
   // 送られてきたキーワードを使ってプロンプトを作り、geminiに質問する
-  public String chat(String keyWord){
+  public String chat(String keyWord, String userId){
 
     //外部知識はここで用意する
-    SortILPResult sortILPResult = new SortILPResult();
-    List<ILPResultDTO> trimmedList = sortILPResult.trimILPResultDTOs();
+    List<ILPResultDTO> iLPResultList = iLPService.findAllByUserId(userId);
+    List<ILPResultDTO> trimmedList = iLPResultList.stream()
+    .map(m -> {
+        ILPResultDTO copy = new ILPResultDTO();
+        copy.setResultId(m.getResultId());
+        copy.setIngredients(m.getIngredients());
+        copy.setTotalPrice(m.getTotalPrice());
+        copy.setTotalKcal(m.getTotalKcal());
+        return copy;
+    })
+    .toList();
     ObjectMapper mapper = new ObjectMapper();
     String context = null;
     try {
@@ -41,11 +56,17 @@ public class ChatService {
                   + "キーワード:\n" + keyWord
                   + "\nスキーマ:\n" + schema
                   + "\nコンテキスト" + context;
-    return geminiClientService.chat(prompt);
+    JsonNode rawResponse = geminiClientService.chat(prompt);
+    JsonNode mergedResponse = mergeResultByResultId(rawResponse, iLPResultList);
+    try {
+      return mapper.writeValueAsString(mergedResponse);
+    }catch(Exception e) {
+      return "text : mergedResponseをjsonから文字列へマッピングする過程でエラーが発生しました。";
+    }
   }
 
 
-  public static String difineSchema() {
+  private static String difineSchema() {
     String schema = "{\r\n" + //
             "  \"type\": \"object\",\r\n" + //
             "  \"description\": \"いくつかの種類の献立と、付随するメッセージをレスポンスとして返してください。\",\r\n" + //
@@ -100,5 +121,23 @@ public class ChatService {
             "}\r\n" + //
             "";
     return schema;
+  }
+
+  private JsonNode mergeResultByResultId (JsonNode rawResponse, List<ILPResultDTO> iLPResultList) {
+    ObjectMapper mapper = new ObjectMapper();
+    ArrayNode mealsArray = (ArrayNode) rawResponse.get("meals");
+    for (JsonNode mealNode : mealsArray) {
+      if (!(mealNode instanceof ObjectNode obj)) continue;
+      Integer resultId = obj.get("selectedId").asInt();
+      iLPResultList.stream()
+        .filter(o -> resultId.equals(o.getResultId()))
+        .findFirst()
+        .ifPresent(o -> {
+          ObjectNode addNode = mapper.valueToTree(o);
+          addNode.remove("resultId");
+          obj.setAll(addNode);
+        });
+    }
+    return rawResponse;
   }
 }

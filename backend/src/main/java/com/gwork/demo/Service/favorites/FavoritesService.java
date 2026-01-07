@@ -52,6 +52,11 @@ public class FavoritesService {
     return repository.findAll();
   }
 
+  // レコードを削除
+  public void deleteById (String userId, Integer menuId) {
+    repository.deleteByUserIdAndMenuId(userId, menuId);
+  }
+
   // ハッシュ値生成
   private String generateHash(FavoritesRequestDTO dto) {
     try {

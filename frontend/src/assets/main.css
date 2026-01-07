@@ -12,6 +12,22 @@
   .slide-left-leave-active { @apply transition-transform duration-300 ease-in; }
 }
 
+/* 使用食材の候補を表示する際に、画面下部からモーダルが現れるアニメーション */
+.slide-up-enter-active,
+.slide-up-leave-active {
+  transition: transform 0.3s ease, opacity 0.3s ease;
+}
+.slide-up-enter-from,
+.slide-up-leave-to {
+  transform: translateY(100%);
+  opacity: 0;
+}
+.slide-up-enter-to,
+.slide-up-leave-from {
+  transform: translateY(0);
+  opacity: 1;
+}
+
 /* 食材価格表を編集するモードのときの、セルの背景が点滅するアニメーション */
 @keyframes blink {
   0%   { background-color: #fff; }

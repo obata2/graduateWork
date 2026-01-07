@@ -13,7 +13,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 @Service
 public class EstatClientService {
-  @Value("${ESTAT_API_KEY}")
+  @Value("${estat.api.key}")
   private String appId; // 自分のAPIキー
 
   // --- 統計データをAPIで取ってくる ---

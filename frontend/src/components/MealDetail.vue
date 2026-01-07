@@ -1,9 +1,9 @@
 <script setup>
 import { ref, inject, onMounted, nextTick } from 'vue'
-import axios from "axios"
 import ModalSquare from "C:\\Users\\81809\\Desktop\\demo\\frontend\\src\\components\\ModalSquare.vue";
 import NutrientsContriRateGraph from '../components/NutrientsContriRateGraph.vue';
 import PfcContriRateGraph from '../components/PfcContriRateGraph.vue';
+import { apiClient } from 'C:\\Users\\81809\\Desktop\\demo\\frontend\\src\\lib\\apiClient.js';
 
 const closeFullScreen = inject('closeFullScreen')
 const isExist = ref(false)
@@ -13,7 +13,7 @@ const props = defineProps({
 })
 
 onMounted(async () => {
-  const res = await axios.post(`http://localhost:50000/psqlFavorites/exist`, props.data)
+  const res = await apiClient.post(`/psqlFavorites/exist`, props.data)
   isExist.value = res.data    // 存在する→true, 存在しない→false
   // eslint-disable-next-line no-debugger
   debugger
@@ -44,7 +44,7 @@ function openGraph(nutrientsContriRate, pfcContriRate) {
 // --- SQLでfavoritesテーブルに保存するAPI ---
 const save = async (data) => {
   console.log("お気に入り登録するよ");
-  await axios.post(`http://localhost:50000/psqlFavorites/save`, data);
+  await apiClient.post(`/psqlFavorites/save`, data);
   isExist.value = true
 }
 

@@ -9,7 +9,7 @@ import FavoriteView from './views/FavoriteView.vue'
 
 import MealDetail from './components/MealDetail.vue'
 
-const activeTab = ref('favorite')  // ← 状態は親に持たせる
+const activeTab = ref('meal')  // ← 状態は親に持たせる
 // タブに応じて表示するコンポーネントを返す computed
 const activeTabComponent = computed(() => {
   switch (activeTab.value) {

@@ -1,12 +1,13 @@
 <script setup>
 import { ref, onMounted, inject, nextTick } from 'vue';
-import axios from "axios";
 
 import ModalSquare from "C:\\Users\\81809\\Desktop\\demo\\frontend\\src\\components\\ModalSquare.vue";
 
+import { apiClient } from 'C:\\Users\\81809\\Desktop\\demo\\frontend\\src\\lib\\apiClient.js';
+
 const favoritesList = ref([]);
 const findAll = async () => {
-  const findRes = await axios.get('http://localhost:50000/psqlFavorites/findAll');
+  const findRes = await apiClient.get('/psqlFavorites/findAll');
   favoritesList.value = findRes.data;
 }
 
@@ -14,9 +15,20 @@ onMounted(async () => {
   await findAll();
 })
 
-const deleteMenuName = ref(null)
-const setDeleteMenuName = (menuName) => {
-  deleteMenuName.value = menuName
+const favoriteToDelete = ref(null)
+const setToDelete = (favorite) => {
+  favoriteToDelete.value = favorite
+}
+
+// 削除処理
+const deleteById = async (userId, menuId) => {
+  await apiClient.delete('/psqlFavorites/deleteById', {
+    params: {
+      userId,
+      menuId
+    }
+  });
+  await findAll();
 }
 
 const openFullScreen = inject('openFullScreen')
@@ -63,7 +75,7 @@ const closeModal = () => {
       <button
         class="px-3 flex items-center justify-center border-l text-gray-400 hover:text-red-500 hover:bg-red-50 active:bg-red-50 focus:outline-none"
         @click="() => {
-          setDeleteMenuName(favorite.menuName);
+          setToDelete(favorite);
           nextTick(() => openModal('beforeDelete'));
         }">
         <span class="material-symbols-outlined">delete</span>
@@ -73,16 +85,25 @@ const closeModal = () => {
     <ModalSquare :show="activeModal === 'beforeDelete'" width="80%" @close="closeModal">
       <div class="flex flex-col items-center text-center gap-8">
         <span
-          class="material-symbols-outlined flex items-center justify-center w-12 h-12 rounded-full text-4xl text-red-600 bg-red-100">delete</span>
+          class="material-symbols-outlined flex items-center justify-center w-12 h-12 rounded-full text-4xl text-red-500 bg-red-50">delete</span>
         <p class="text-sm">
-          「<span class="font-bold">{{ deleteMenuName }}</span>」を、お気に入りから削除しますか？
+          「<span class="font-bold">{{ favoriteToDelete.menuName }}</span>」を、お気に入りから削除しますか？
         </p>
         <div class="flex w-full gap-4">
           <button class="flex-1 p-2 border border-gray-600 text-gray-600 rounded-full" @click=closeModal>キャンセル</button>
           <button class="flex-1 p-2 bg-red-600 text-white rounded-full" @click="() => {
-            openModal('afterDelete');
+            deleteById(favoriteToDelete.userId, favoriteToDelete.menuId);
+            nextTick(() => openModal('afterDelete'));
           }">削除する</button>
         </div>
+      </div>
+    </ModalSquare>
+    <ModalSquare :show="activeModal === 'afterDelete'" width="80%" @close="closeModal">
+      <div class="flex flex-col items-center text-center gap-6">
+        <span
+          class="material-symbols-outlined flex items-center justify-center w-12 h-12 rounded-full text-4xl text-green-600 bg-green-100">check</span>
+        <p class="text-lg font-bold">削除しました</p>
+        <button class="w-full p-3 bg-green-600 text-white rounded-full" @click="closeModal">閉じる</button>
       </div>
     </ModalSquare>
   </div>

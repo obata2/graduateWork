@@ -31,7 +31,7 @@ public class ChatbotController {
 
   @PostMapping("/generateMeals")
   public String generateMeals(@RequestBody Map<String, String> body) {
-    return chatService.chat(body.get("text"));
+    return chatService.chat(body.get("text"), body.get("userId"));
   }
 
   @GetMapping("sampleMessage")
