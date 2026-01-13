@@ -27,11 +27,11 @@ import jakarta.annotation.PostConstruct;
 public class SolveILPService {
 
   // コンストラクタインジェクション
-  private DataAdjusterService dataAdjusterService;
   private final FixValueFactory fixValueFactory;
-  public SolveILPService (DataAdjusterService dataAdjusterService, FixValueFactory fixValueFactory) {
-    this.dataAdjusterService = dataAdjusterService;
+  private final DataAdjusterFactory dataAdjusterFactory;
+  public SolveILPService (FixValueFactory fixValueFactory, DataAdjusterFactory dataAdjusterFactory) {
     this.fixValueFactory = fixValueFactory;
+    this.dataAdjusterFactory = dataAdjusterFactory;
   }
   
   // --- DLLのロード処理を行う ---
@@ -50,6 +50,7 @@ public class SolveILPService {
   //ロード済みフラグ
   private boolean loaded = false;
 
+  private DataAdjuster dataAdjusterService;
   private double[][][] adjustedNutrientTable;
   private double[][] adjustedPrices;
   private double[][] adjustedStandardQty;
@@ -59,8 +60,9 @@ public class SolveILPService {
   private String [][] id = NutrientService.id;
   private String[] nutrientsName = {"たんぱく質","食物繊維総量","カリウム","カルシウム","マグネシウム","鉄","亜鉛","ビタミンA","ビタミンD","ビタミンB1","ビタミンB2","ビタミンB6","葉酸","ビタミンC"};
 
-  @PostConstruct
-  public void init () {
+  // 計算に用いる変数の初期化処理
+  private void init (String userId) {
+    dataAdjusterService = dataAdjusterFactory.create(userId);
     adjustedNutrientTable = dataAdjusterService.getAdjustedNutrientTable();
     adjustedPrices = dataAdjusterService.getAdjustedPrices();
     adjustedStandardQty = dataAdjusterService.getAdjustedStandardQty();
@@ -68,11 +70,12 @@ public class SolveILPService {
   }
 
   // 整数計画法で解き、結果をまとめてリストにする
-  public ArrayList<ILPResultDTO> solveILP (Set<String> selected, Set<String> excluded) {
+  public ArrayList<ILPResultDTO> solveILP (String userId, Set<String> selected, Set<String> excluded) {
     loadDLL();
+    init(userId);
     ArrayList<ILPResultDTO> iLPResultList = new ArrayList<>();
     long startTime = System.currentTimeMillis(); // 開始時刻を記録
-    long timeout = 6000; // 時間制限(ミリ秒)
+    long timeout = 60000; // 時間制限(ミリ秒)
     //計算結果を得る
     int resultId = 1;
     for(int stapleIndex=0; stapleIndex<4; stapleIndex++){
@@ -85,10 +88,8 @@ public class SolveILPService {
           continue;
         }
         ArrayList<ILPResultDTO> twoPatternsOfresults = new ArrayList<>();
-        
-        FixValue fixValue = fixValueFactory.create(stapleIndex, proteinIndex);   //ここで栄養素目標・カロリーバランスの固定値で補正が入る
-        twoPatternsOfresults = solveILP(fixValue, twoPatternsOfresults, selected, excluded);   // ** totalPrice, solutionVectorをセット **
-        
+        FixValue fixValue = fixValueFactory.create(userId, stapleIndex, proteinIndex);   //ここで栄養素目標・カロリーバランスの固定値で補正が入る
+        twoPatternsOfresults = solveILP(twoPatternsOfresults, fixValue, selected, excluded);   // ** totalPrice, solutionVectorをセット **
         for(ILPResultDTO result : twoPatternsOfresults){ 
           if(result.getSolutionVector() == null){   //計算不可ならばスキップ
             System.out.println(ingName[0][stapleIndex] + " , " + ingName[0][proteinIndex] + " -> 計算不可能です");
@@ -115,7 +116,7 @@ public class SolveILPService {
   
 
   // --- ILPで解く(totalPrice, solutionVectorをセット) ---
-  private ArrayList<ILPResultDTO> solveILP(FixValue fixValue, ArrayList<ILPResultDTO> twoPatternsOfresult, Set<String> selected, Set<String> excluded) {
+  private ArrayList<ILPResultDTO> solveILP(ArrayList<ILPResultDTO> twoPatternsOfresult, FixValue fixValue, Set<String> selected, Set<String> excluded) {
     final double[] adjustedTargets = fixValue.getAdjustedTargets();
     final double fixedPrice = fixValue.getFixedPrice();
     int vegNum = adjustedNutrientTable[1].length;
@@ -144,7 +145,6 @@ public class SolveILPService {
       MPVariable[] x = new MPVariable[vegNum];        //主変数
       MPVariable[] y = new MPVariable[vegNum];        //変数が非連続な値をとるようにさせる補助バイナリ変数(0 or 1)
       MPVariable[] z = new MPVariable[vegNum];        //変数が非ゼロであるかを管理する補助変数(0 or 1)
-      int maxValue = 1000;
       for (int i = 0; i < vegNum; i++) {
         double minQty = adjustedStandardQty[1][i] * 0.5;
         double maxQty = adjustedStandardQty[1][i] * 3;
@@ -367,7 +367,7 @@ public class SolveILPService {
   }
 
 
-  // --- 計算結果をjsonファイルに書き込む ---
+  /* --- 計算結果をjsonファイルに書き込む ---
   public void saveResultToCache(ArrayList<ILPResultDTO> iLPResultList) {
     final String FILE_PATH = "C:\\Users\\81809\\Desktop\\demo\\frontend\\src\\assets\\cachedILPResult.json";
     ObjectMapper mapper = new ObjectMapper();
@@ -376,5 +376,5 @@ public class SolveILPService {
     } catch (IOException e) {
         e.printStackTrace();
     }
-  }
+  }*/
 }

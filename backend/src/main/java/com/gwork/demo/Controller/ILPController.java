@@ -7,6 +7,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -15,13 +16,13 @@ import com.gwork.demo.Service.ilp.ILPService;
 import com.gwork.demo.dto.ILPReplaceRequestDTO;
 import com.gwork.demo.dto.ILPResultDTO;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.PathVariable;
 
 
 
 
 @RestController
-@RequestMapping("/ILP")
+@RequestMapping("/ilp-results")
 public class ILPController {
   
   private final ILPService iLPService;
@@ -29,27 +30,15 @@ public class ILPController {
     this.iLPService = iLPService;
   }
 
-
-  @PostMapping("/replaceResults")
-  public void replaceResults (@RequestBody ILPReplaceRequestDTO ilpReplaceRequestDTO) {
-    iLPService.replaceResults(ilpReplaceRequestDTO);
+  // 最適化計算を行った後、DBを更新する
+  @PutMapping("/{userId}")
+  public void replaceResults (@PathVariable("userId") String userId, @RequestBody ILPReplaceRequestDTO ilpReplaceRequestDTO) {
+    iLPService.replaceResults(userId, ilpReplaceRequestDTO);
   }
 
-
-  @PostMapping("/findAll")
-  public List<ILPResultDTO> findAllByUserId (@RequestBody Map<String, String> body) {
-    String userId = body.get("userId");
+  // DBからレコードのリストを取得する
+  @GetMapping("/{userId}")
+  public List<ILPResultDTO> findAllByUserId (@PathVariable("userId") String userId) {
     return iLPService.findAllByUserId(userId);
   }
-  
-  
-
-
-
-  @GetMapping("/find")
-  public List<ILPResultDTO> find() {
-    return iLPService.findAllByUserId("admin");
-  }
-  
-  
 }

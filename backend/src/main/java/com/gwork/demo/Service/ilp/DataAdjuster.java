@@ -1,26 +1,13 @@
 package com.gwork.demo.Service.ilp;
 
 import java.util.Map;
-
-import org.springframework.stereotype.Service;
-
-import java.util.Arrays;
 import java.util.LinkedHashMap;
 
 import com.gwork.demo.Service.estat.EstatService;
 import com.gwork.demo.Service.nutrient.NutrientService;
 
-import jakarta.annotation.PostConstruct;
-
 //ILPのために必要な、(事前加工済みの)データを揃えるクラス
-@Service
-public class DataAdjusterService {
-
-  private EstatService estatService;
-  // コンストラクタインジェクション
-  public DataAdjusterService(EstatService estatService) {
-    this.estatService = estatService;
-  }
+public class DataAdjuster {
 
   //このクラス内限定の変数
   private Map<String, Integer> specific = Map.of(      //excel上の目安量よりも、ここで書いたものの方がが優先される("個数"を単位としたい物たち)
@@ -48,10 +35,9 @@ public class DataAdjusterService {
   public double[][] getAdjustedStandardQty () {return adjustedStandardQty;}
   public double[][] getAdjustedPrices () {return adjustedPrices;}
   
-
-  @PostConstruct
-  private void init() {
-    priceLatest = estatService.getIdAndPriceMap();
+  // コンストラクタで変数を用意する
+  public DataAdjuster (String userId, EstatService estatService) {
+    priceLatest = estatService.getIdAndPriceMap(userId);
     this.vegUnitQuantity = getUnitQuantity(ingName[1], specific);
     this.adjustedStandardQty[0] = standardQty[0];
     this.adjustedStandardQty[1] = adjustStdQtyOfVeg(vegUnitQuantity, standardQty[1], ingName[1], specific);

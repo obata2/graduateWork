@@ -39,25 +39,6 @@ public class EstatService {
     this.pricesLatestRepository = repository;
   }
 
-  /*
-   * // API経由で価格統計を取得し、upsertする
-   * ←もうupsertの必要はないので、単純なupdateでprices_latestテーブルを更新するように変えたい
-   * public void savePricesLatest (String userId) {
-   * PriceStatDTO filterPriceStatDTO = estatTransoformService.transform();
-   * LinkedHashMap<String, String> idAndName = NutrientService.idAndName;
-   * LinkedHashMap<String, String> idAndPriceUnitQty =
-   * NutrientService.idAndPriceUnitQty;
-   * for(String ingredientId : filterPriceStatDTO.getPriceLatest().keySet()){
-   * String ingredientName = idAndName.get(ingredientId);
-   * Integer priceLatest = filterPriceStatDTO.getPriceLatest().get(ingredientId);
-   * String priceUnitQty = idAndPriceUnitQty.get(ingredientId);
-   * System.out.println("upsertします");
-   * repository.upsertIfNotFixed(userId, ingredientId, ingredientName,
-   * priceLatest, priceUnitQty);
-   * }
-   * }
-   */
-
   // API経由で価格統計を取得し、DTOで値を返す ←引数としてcdAreaとcdTimeFromが欲しい
   public PriceStatDTO fetchPriceStat(String cdArea) {
     JsonNode jsonNode = estatClientService.fetchPriceStat(cdArea);
@@ -75,24 +56,27 @@ public class EstatService {
   }
 
   // ユーザーの編集した情報を受け取り、prices_latestテーブルを更新する
-  public void saveEdits(List<PriceLatestRowDTO> req) {
+  public void saveEdits(String userId, List<PriceLatestRowDTO> req) {
+    System.out.println("レコードを更新するよ");
     for (PriceLatestRowDTO editedRow : req) {
       PriceLatestEditReqDTO editReq = new PriceLatestEditReqDTO();
       BeanUtils.copyProperties(editedRow, editReq);
-      pricesLatestRepository.saveEdits(editReq.getUserId(), editReq.getIngredientId(), editReq.getIsFixed(),
-          editReq.getPriceLatest());
-      System.out.println("レコードを更新するよ");
+      // ログイン中のユーザー自身に紐づくデータのみ、更新するようにする
+      if(!editReq.getUserId().equals(userId)){
+        editReq.setUserId(userId);
+      }
+      pricesLatestRepository.saveEdits(editReq.getUserId(), editReq.getIngredientId(), editReq.getIsFixed(), editReq.getPriceLatest());
     }
   }
 
   // prices_latestテーブルの全レコードを取得する
-  public List<PriceLatestRowDTO> finadAll() {
-    return pricesLatestRepository.findOrderRows();
+  public List<PriceLatestRowDTO> findByUserIdOrderRows(String userId) {
+    return pricesLatestRepository.findByUserIdOrderRows(userId);
   }
 
   // {id : 最新価格}の辞書を作成する
-  public LinkedHashMap<String, Integer> getIdAndPriceMap() {
-    List<PriceLatestRowDTO> entityList = pricesLatestRepository.findOrderRows();
+  public LinkedHashMap<String, Integer> getIdAndPriceMap(String userId) {
+    List<PriceLatestRowDTO> entityList = pricesLatestRepository.findByUserIdOrderRows(userId);
     LinkedHashMap<String, Integer> idAndPrice = new LinkedHashMap<>();
     for (PriceLatestRowDTO entity : entityList) {
       idAndPrice.put(entity.ingredientId(), entity.priceLatest());

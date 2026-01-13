@@ -26,7 +26,6 @@ public class ILPService {
 
   // DBからレコードを取得する
   public List<ILPResultDTO> findAllByUserId (String userId) {
-    System.out.println("DB漁るよ");
     List<ILPResults> entityList = repository.findByUserIdOrderByResultIdAsc(userId);
     List<ILPResultDTO> iLPResultsList = new ArrayList<>();
     for (ILPResults entity : entityList) {
@@ -38,11 +37,10 @@ public class ILPService {
   }
 
   // 整数計画法で計算を行い、さらに結果をDBに保存する
-  public void replaceResults (ILPReplaceRequestDTO ilpReplaceRequestDTO) {
-    String userId = ilpReplaceRequestDTO.getUserId();
+  public void replaceResults (String userId, ILPReplaceRequestDTO ilpReplaceRequestDTO) {
     Set<String> selected = ilpReplaceRequestDTO.getSelected();
     Set<String> excluded = ilpReplaceRequestDTO.getExcluded();
-    ArrayList<ILPResultDTO> iLPResultsList = solveILPService.solveILP(selected, excluded);
+    ArrayList<ILPResultDTO> iLPResultsList = solveILPService.solveILP(userId, selected, excluded);
     ArrayList<ILPResults> entityList = new ArrayList<>();
     for(ILPResultDTO dto : iLPResultsList) {
       ILPResults entity = new ILPResults();

@@ -5,8 +5,8 @@ import com.gwork.demo.Service.nutrient.NutrientService;
 public class FixValue {
 
   // コンストラクタインジェクション
-  private DataAdjusterService dataAdjusterService;
-  public FixValue (DataAdjusterService dataAdjusterService) {
+  private DataAdjuster dataAdjusterService;
+  public FixValue (DataAdjuster dataAdjusterService) {
     this.dataAdjusterService = dataAdjusterService;
   }
 

@@ -4,13 +4,14 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class FixValueFactory {
-  private final DataAdjusterService dataAdjusterService;
-  public FixValueFactory(DataAdjusterService dataAdjusterService) {
-    this.dataAdjusterService = dataAdjusterService;
+  private final DataAdjusterFactory dataAdjusterFactory;
+  public FixValueFactory(DataAdjusterFactory dataAdjusterFactory) {
+    this.dataAdjusterFactory = dataAdjusterFactory;
   }
 
-  public FixValue create(int stapleIndex, int proteinIndex) {
-    FixValue fixValue = new FixValue(dataAdjusterService);
+  public FixValue create(String userId, int stapleIndex, int proteinIndex) {
+    DataAdjuster dataAdjuster = dataAdjusterFactory.create(userId);
+    FixValue fixValue = new FixValue(dataAdjuster);
     fixValue.init(stapleIndex, proteinIndex);
     return fixValue;
   }
