@@ -1,0 +1,21 @@
+{
+  "name": "optMeal",
+  "short_name": "optMeal",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "theme_color": "#ffffff",
+  "background_color": "#ffffff",
+  "icons": [
+    {
+      "src": "/img/icons/optMeal-logo.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/img/icons/optMeal-logo.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

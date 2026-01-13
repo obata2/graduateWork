@@ -12,7 +12,7 @@ defineEmits(['update:modelValue'])
     <!-- 左：データタブ -->
     <button @click="$emit('update:modelValue', 'data')"
       :class="[
-      'flex flex-col items-center justify-center w-20 h-24 rounded-2xl transition-all duration-150',
+      'flex flex-col items-center justify-center w-20 h-full rounded-full transition-all duration-300 hover:text-green-600 active:bg-green-100',
       modelValue === 'data' ? 'text-green-600' : 'text-gray-600'
     ]">
       <span class="material-symbols-outlined">database_search</span>
@@ -21,7 +21,7 @@ defineEmits(['update:modelValue'])
     <!-- 中央：献立タブ -->
     <button @click="$emit('update:modelValue', 'meal')"
       :class="[
-      'flex flex-col items-center justify-center w-20 h-24 rounded-2xl transition-all duration-150',
+      'flex flex-col items-center justify-center w-20 h-full rounded-full transition-all duration-300 hover:text-green-600 active:bg-green-100',
       modelValue === 'meal' ? 'text-green-600' : 'text-gray-600'
     ]">
       <span class="material-symbols-outlined">dinner_dining</span>
@@ -30,7 +30,7 @@ defineEmits(['update:modelValue'])
     <!-- 右：お気に入りタブ -->
     <button @click="$emit('update:modelValue', 'favorite')"
       :class="[
-      'flex flex-col items-center justify-center w-20 h-24 rounded-2xl transition-all duration-150',
+      'flex flex-col items-center justify-center w-20 h-full rounded-full transition-all duration-300 hover:text-green-600 active:bg-green-100',
       modelValue === 'favorite' ? 'text-green-600' : 'text-gray-600'
     ]">
       <span class="material-symbols-outlined">favorite</span>

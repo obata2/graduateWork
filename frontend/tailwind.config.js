@@ -26,7 +26,7 @@ export default {
         'gradient-start': '#FDE0FF',
         'gradient-end': '#C18CD9',
 
-        'warm': '#fef6f0',
+        'warm': '#F7F5EF',
       },
       fontFamily: {
         roboto: ['Roboto', 'system-ui', 'sans-serif'],

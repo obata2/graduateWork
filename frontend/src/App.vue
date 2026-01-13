@@ -48,7 +48,7 @@ provide('closeFullScreen', closeFullScreen)
 
 <!-- frontend/src/App.vue -->
 <template>
-  <div id="app" class="flex flex-col min-h-screen">
+  <div id="app" class="flex flex-col min-h-dvh">
     <!-- ヘッダーとフッターに挟まれたコンポーネントを適切に切り替える -->
     <AppHeader />
     <main class="flex flex-1">
