@@ -24,32 +24,33 @@ public class FavoritesService {
   FavoritesRepository repository;
 
   // レコードを新規登録する
-  public void save(FavoritesRequestDTO dto) {
+  public void save(String userId, FavoritesRequestDTO dto) {
     Favorites entity = new Favorites();
     BeanUtils.copyProperties(dto, entity);
-    String hash = generateHash(dto);
+    TreeMap<String, Object> sortedDishName = new TreeMap<>(dto.getDishName());  // jsonb型ではmapの辞書順が統一されないので、ここでソートしておく
+    String hash = generateHash(userId, sortedDishName);
     entity.setHash(hash);
     repository.save(entity);
   }
 
   // 同じuserIdで、同じハッシュ値になるようなレコードが存在するかを判定
-  public boolean existsByUserIdAndObjectHash(FavoritesRequestDTO dto) {
-    String userId = dto.getUserId();
-    String hash = generateHash(dto);
+  public boolean existsByUserIdAndObjectHash(String userId, Favorites favorites) {
+    TreeMap<String, Object> sortedDishName = new TreeMap<>(favorites.getDishName());  // jsonb型ではmapの辞書順が統一されないので、ここでソートしておく
+    String hash = generateHash(userId, sortedDishName);
     boolean isExist = repository.existsByUserIdAndHash(userId, hash);
     
     if(isExist){
-      System.out.println(dto.getMenuName() + "は存在します！");
+      System.out.println(favorites.getMenuName() + "は存在します！");
     }else{
       System.out.println("hash : " + hash);
-      System.out.println(dto.getMenuName() + "は存在しません");
+      System.out.println(favorites.getMenuName() + "は存在しません");
     }
     return isExist;
   }
 
   // テーブルから全件取得
-  public List<Favorites> findAll () {
-    return repository.findAll();
+  public List<Favorites> findByUserId (String userid) {
+    return repository.findByUserIdOrderByMenuIdAsc(userid);
   }
 
   // レコードを削除
@@ -58,19 +59,13 @@ public class FavoritesService {
   }
 
   // ハッシュ値生成
-  private String generateHash(FavoritesRequestDTO dto) {
+  private String generateHash(String menuName, TreeMap<String, Object> sortedDishName) {
     try {
       MessageDigest digest = MessageDigest.getInstance("SHA-256");
-
-      // jsonb型ではmapの辞書順が統一されないので、ここでソートしておく
-      TreeMap<String, Object> sortedDishName = new TreeMap<>(dto.getDishName());
-      // ハッシュ対象フィールドを明示的に連結
-      String source =
-          dto.getMenuName() + "|" +
-          sortedDishName;
+      // ハッシュ対象
+      String source = menuName + "|" + sortedDishName;
 
       byte[] hashBytes = digest.digest(source.getBytes(StandardCharsets.UTF_8));
-
       StringBuilder sb = new StringBuilder();
       for (byte b : hashBytes) {
         sb.append(String.format("%02x", b));

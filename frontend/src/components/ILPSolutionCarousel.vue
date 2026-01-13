@@ -1,5 +1,9 @@
 <script setup>
-import { defineProps, computed } from 'vue'
+import { ref, defineProps, computed, nextTick } from 'vue'
+
+import ModalSquare from "C:\\Users\\81809\\Desktop\\demo\\frontend\\src\\components\\ModalSquare.vue";
+import NutrientsContriRateGraph from '../components/NutrientsContriRateGraph.vue';
+import PfcContriRateGraph from '../components/PfcContriRateGraph.vue';
 
 const props = defineProps({
   data: Object
@@ -8,6 +12,28 @@ const props = defineProps({
 const listSize = computed(() =>
   props.data.length
 )
+
+// --- モーダルの表示まわり ---
+const activeModal = ref(null); //   <ModalSquare :show="activeModal === '○○'"に引っかかることで任意のモーダルを呼び出す  
+const openModal = (name) => {
+  activeModal.value = name;
+};
+const closeModal = () => {
+  activeModal.value = null;         //<ModalSquare :show="activeModal === '○○'" のいずれにも引っかからなくなる
+};
+
+// --- グラフ描画まわり ---
+const graphTab = ref('nutrients');
+const nutrientsContriGraphData = ref([]);
+const pfcContriGraphData = ref([]);
+function openGraph(nutrientsContriRate, pfcContriRate) {
+  nutrientsContriGraphData.value = null;     // 一度空にする
+  pfcContriGraphData.value = null;
+  nextTick(() => {
+    nutrientsContriGraphData.value = nutrientsContriRate;   //ここでのデータ変更がContriGraph内でwatchされ、グラフの描画が始まる
+    pfcContriGraphData.value = pfcContriRate;
+  })
+}
 </script>
 
 <template>
@@ -47,10 +73,38 @@ const listSize = computed(() =>
             </div>
           </div>
 
-
-          <span class="text-sm font-medium ">{{ index + 1 }}/{{ listSize }}</span>
+          <!-- カードのフッター -->
+          <div class="flex justify-between items-center">
+            <span class="text-sm font-medium">{{ index + 1 }}/{{ listSize }}</span>
+            <button @click="() => {
+              openModal('graph');
+              nextTick(() => openGraph(solution.nutrientsContriRate, solution.pfcContriRate));
+            }">
+              <span class="material-symbols-outlined text-green-600 text-3xl">bar_chart_4_bars</span>
+            </button>
+          </div>
         </div>
       </div>
     </div>
+    <!-- 寄与率のグラフ描画 -->
+    <ModalSquare :show="activeModal === 'graph'" width="100%" height="70%" @close="closeModal">
+      <div class="relative">
+        <!-- 付箋風タブ切り替え -->
+        <div class="absolute -top-14 flex z-10">
+          <button
+            @click="graphTab = 'nutrients'"
+            class="px-4 py-1 rounded-t-lg"
+            :class="graphTab === 'nutrients' ? 'bg-white text-green-600 border-b-0' : 'bg-gray-200 text-gray-600'"
+          >栄養素</button>
+          <button
+            @click="graphTab = 'calories'"
+            class="px-4 py-1 rounded-t-lg"
+            :class="graphTab === 'calories' ? 'bg-white text-green-600 border-b-0' : 'bg-gray-200 text-gray-600'"
+          >カロリー</button>
+        </div>
+        <div v-show="graphTab === 'nutrients'"><NutrientsContriRateGraph :graphData="nutrientsContriGraphData"/></div>
+        <div v-show="graphTab === 'calories'"><PfcContriRateGraph :graphData="pfcContriGraphData"/></div>
+      </div>
+    </ModalSquare>
   </div>
 </template>

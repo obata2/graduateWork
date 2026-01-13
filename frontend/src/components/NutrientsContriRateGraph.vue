@@ -97,8 +97,9 @@ onBeforeUnmount(() => {
 
 <template>
   <!-- ModalSquare にスロットで渡すコンテンツ -->
-   <div class="w-full" style="height: 500px;"> <!-- ←固定高さの親要素 -->
-    <h2 class="text-xl mb-2">摂取目標値に対する、各食材の寄与率(%)</h2>
+   <div class="w-full" style="height: 450px;"> <!-- ←固定高さの親要素 -->
+    <p class="text-lg mb-2 font-medium">摂取目標値に対する、各食材の寄与率(%)</p>
     <canvas ref="chartCanvas"></canvas>
+    <p class="text-xs my-2 text-gray-600">「日本人の食事摂取基準(2025年版)」をもとに、成人男性における1日の摂取<span class="underline">推奨量</span>の1/3を目標値と定めています。</p>
   </div>
 </template>

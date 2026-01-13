@@ -10,6 +10,7 @@ import com.gwork.demo.Service.chatbot.ChatService;
 import java.util.Map;
 
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -23,15 +24,17 @@ public class ChatbotController {
   public ChatbotController(ChatService chatService) {
     this.chatService = chatService;
   }
+  
+  // キーワードを受けて献立情報を生成する
+  @PostMapping("/generation/{userId}")
+  public String generateMeals(@PathVariable("userId") String userId, @RequestBody Map<String, String> body) {
+    return chatService.chat(userId, body.get("text"));
+  }
 
+  /* 
   @PostMapping("/hello")
   public String hello(@RequestBody Map<String, String> body) {
     return chatService.sampleChat(body.get("text"));
-  }
-
-  @PostMapping("/generateMeals")
-  public String generateMeals(@RequestBody Map<String, String> body) {
-    return chatService.chat(body.get("text"), body.get("userId"));
   }
 
   @GetMapping("sampleMessage")
@@ -144,5 +147,5 @@ public class ChatbotController {
     }
     return sampleMessage;
   }
-
+  */
 }

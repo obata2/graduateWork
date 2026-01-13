@@ -5,6 +5,11 @@ import NutrientsContriRateGraph from '../components/NutrientsContriRateGraph.vue
 import PfcContriRateGraph from '../components/PfcContriRateGraph.vue';
 import { apiClient } from 'C:\\Users\\81809\\Desktop\\demo\\frontend\\src\\lib\\apiClient.js';
 
+// ユーザー情報の取得
+import { useUserStore } from 'C:\\Users\\81809\\Desktop\\demo\\frontend\\src\\stores\\users.js'
+const userStore = useUserStore();
+const userId = userStore.userId;
+
 const closeFullScreen = inject('closeFullScreen')
 const isExist = ref(false)
 
@@ -13,7 +18,9 @@ const props = defineProps({
 })
 
 onMounted(async () => {
-  const res = await apiClient.post(`/psqlFavorites/exist`, props.data)
+  const res = await apiClient.post(`/favorites/${userId}/existence`,
+    props.data
+  );
   isExist.value = res.data    // 存在する→true, 存在しない→false
   // eslint-disable-next-line no-debugger
   debugger
@@ -44,7 +51,7 @@ function openGraph(nutrientsContriRate, pfcContriRate) {
 // --- SQLでfavoritesテーブルに保存するAPI ---
 const save = async (data) => {
   console.log("お気に入り登録するよ");
-  await apiClient.post(`/psqlFavorites/save`, data);
+  await apiClient.put(`/favorites/${userId}`, data);
   isExist.value = true
 }
 
@@ -139,10 +146,10 @@ const save = async (data) => {
 
     <!-- フッター -->
     <footer class="sticky bottom-0 h-24 w-full gap-3 bg-white border-t">
-      <div class="sticky bottom-20 left-0 right-0 flex gap-3 px-4 pt-2">
+      <div class="flex justify-center items-center h-full gap-3 px-4">
         <!-- お気に入り登録 -->
         <button v-if="!isExist"
-          class="flex flex-1 items-center justify-center gap-4 rounded-full bg-orange-400 p-3 text-white font-medium"
+          class="flex flex-1 items-center justify-center gap-4 h-14 rounded-full bg-green-500 p-3 text-white font-medium"
           @click="() => {
             save(props.data)
             nextTick(() => openModal('registered'))
@@ -152,7 +159,7 @@ const save = async (data) => {
         </button>
 
         <div v-else
-          class="flex flex-1 items-center justify-center gap-4 rounded-full bg-orange-400 p-3 text-white font-medium">
+          class="flex flex-1 items-center justify-center gap-4 h-14 rounded-full bg-green-500 p-3 text-white font-medium">
           <span class="material-symbols-outlined">favorite</span>
           登録済みです！
         </div>
@@ -161,15 +168,16 @@ const save = async (data) => {
         <button @click="() => {
           openModal('graph')
           nextTick(() => openGraph(props.data.nutrientsContriRate, props.data.pfcContriRate))
-        }" class="flex items-center justify-center w-12 h-12 rounded-full bg-orange-400 text-white text-2xl">
+        }" class="flex flex-col items-center justify-center w-14 h-14 rounded-full bg-green-500 text-white text-2xl">
           <span class="material-symbols-outlined">bar_chart_4_bars</span>
+          <p class="text-xs text-white-500">栄養</p>
         </button>
 
         <!-- メモ -->
-        <span
-          class="material-symbols-outlined flex items-center justify-center w-12 h-12 rounded-full bg-orange-400 text-white text-2xl">
-          edit_note
-        </span>
+        <button class="flex flex-col items-center justify-center w-14 h-14 rounded-full bg-green-500 text-white text-2xl">
+          <span class="material-symbols-outlined mt-1">edit_note</span>
+          <p class="text-xs text-white-500 -mt-1">メモ</p>
+        </button>
       </div>
     </footer>
 
@@ -190,9 +198,9 @@ const save = async (data) => {
         <!-- 付箋風タブ切り替え -->
         <div class="absolute -top-14 flex z-10">
           <button @click="graphTab = 'nutrients'" class="px-4 py-1 rounded-t-lg"
-            :class="graphTab === 'nutrients' ? 'bg-white text-orange-600 border-b-0' : 'bg-gray-200 text-gray-600'">栄養素</button>
+            :class="graphTab === 'nutrients' ? 'bg-white text-green-600 border-b-0' : 'bg-gray-200 text-gray-600'">栄養素</button>
           <button @click="graphTab = 'calories'" class="px-4 py-1 rounded-t-lg"
-            :class="graphTab === 'calories' ? 'bg-white text-orange-600 border-b-0' : 'bg-gray-200 text-gray-600'">カロリー</button>
+            :class="graphTab === 'calories' ? 'bg-white text-green-600 border-b-0' : 'bg-gray-200 text-gray-600'">カロリー</button>
         </div>
         <div v-show="graphTab === 'nutrients'">
           <NutrientsContriRateGraph :graphData="nutrientsContriGraphData" />

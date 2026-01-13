@@ -6,6 +6,11 @@ import PriceTransitionGraph from '../components/PriceTransitionGraph.vue';
 import ModalSquare from "C:\\Users\\81809\\Desktop\\demo\\frontend\\src\\components\\ModalSquare.vue";
 import { apiClient } from 'C:\\Users\\81809\\Desktop\\demo\\frontend\\src\\lib\\apiClient.js';
 
+// ユーザー情報の取得
+import { useUserStore } from 'C:\\Users\\81809\\Desktop\\demo\\frontend\\src\\stores\\users.js'
+const userStore = useUserStore()
+const userId = userStore.userId
+
 
 // 上部のタブ切り替え用
 const tabs = [
@@ -19,7 +24,7 @@ const originalTableData = ref([])
 const editedTableData = ref([])
 const isEditMode = ref(false)      // 価格を手入力するモードかのフラグ
 const setTableData = async () => {
-  const tableDataRes = await apiClient.get(`/estat/findAll`);
+  const tableDataRes = await apiClient.get(`/estat/prices-latest/${userId}`);
   originalTableData.value = tableDataRes.data;
 }
 
@@ -29,18 +34,20 @@ const ingredientName = ref()    // 選択状態にある、↑のkeyである食
 const priceUnitQtyMap = ref()   // 価格統計単位を示す辞書
 const priceUnitQty = ref()      // 選択状態にある食材の、価格統計単位   (タイトル用にグラフへ渡す)
 const setNameAndId = async () => {
-  const mapperRes = await apiClient.get(`/mapper/mIngredients`);
+  const mapperRes = await apiClient.get(`/mapper/m-Ingredients`);
   nameAndIdMap.value = mapperRes.data.nameAndId;
+  ingredientName.value = Object.keys(nameAndIdMap.value)[0];    // 初期の選択状態は、先頭の要素
   priceUnitQtyMap.value = mapperRes.data.nameAndPriceUnitQty;
 }
 const areaParamMap = ref()      // セレクトボックス(比較する都市)用の辞書
 const compCityName = ref()     // 選択状態にある、↑のkeyである都市名
-const timeFromParamMap = ref()  // セレクトボックス(期間)用の辞書
+//const timeFromParamMap = ref()  // セレクトボックス(期間)用の辞書
 //const timeFromParam = ref()   // 選択状態にある、cdTimeFrom
 const setAPIParams = async () => {
-  const apiParamsRes = await apiClient.get(`/estat/apiParams`);
+  const apiParamsRes = await apiClient.get(`/estat/api-params`);
   areaParamMap.value = apiParamsRes.data.areaParam;
-  timeFromParamMap.value = apiParamsRes.data.timeFromParam;
+  compCityName.value = Object.keys(areaParamMap.value)[0];    // 初期の選択状態は、先頭の要素
+  //timeFromParamMap.value = apiParamsRes.data.timeFromParam;
 }
 
 // DOM生成時に変数の用意 
@@ -52,9 +59,8 @@ onMounted(async () => {
 
 // DBを最新情報に更新し、さらにDBからデータを再取得する
 const updateLatest = async () => {
-  await apiClient.post(`/estat/updateLatest`, {
-    cdArea: areaParamMap.value["名古屋市"],
-    userId: "admin"
+  await apiClient.put(`/estat/prices-latest/${userId}/sync`, {
+    cdArea: areaParamMap.value["名古屋市"]
   });
   await setTableData();
 }
@@ -70,11 +76,16 @@ const cancelEdit = () => {
 }
 
 // 表の編集を完了した際に、DBの保存処理を行い、さらにDBからデータを再取得する
+const canSave = ref(false); // ← 明示的に定義
 const saveEdits = async () => {
-  await apiClient.post(`/estat/saveEdits`, editedTableData.value);
-  console.log(editedTableData)
-  isEditMode.value = false
-  await setTableData();
+  if (canSave.value) {
+    await apiClient.put(`/estat/prices-latest/${userId}`, editedTableData.value);
+    isEditMode.value = false
+    await setTableData();
+  } else {
+    console.log('不正な入力値があります');
+    return;
+  }
 }
 
 // --- モーダルの表示まわり ---
@@ -101,8 +112,10 @@ const renderChart = async () => {
     timeTo: "2025000505",
     areaCode: areaParamMap.value["名古屋市"]
   };*/
-  const mainRes = await apiClient.post(`/estat/fetch`, {
-    cdArea: areaParamMap.value["名古屋市"]
+  const mainRes = await apiClient.get(`/estat/fetch`, {
+    params: {
+      cdArea: areaParamMap.value["名古屋市"]
+    }
   });
   results.push({
     cityName: "名古屋市",
@@ -116,9 +129,11 @@ const renderChart = async () => {
       timeTo: "2025000505",
       areaCode: areaParam.value[compCity.value]
     };*/
-    const compRes = await apiClient.post(`/estat/fetch`, {
+    const compRes = await apiClient.get(`/estat/fetch`, {
+    params: {
       cdArea: areaParamMap.value[compCityName.value]
-    });
+    }
+  });
     results.push({
       cityName: compCityName.value,
       dateLabel: compRes.data.dateLabel[nameAndIdMap.value[ingredientName.value]],
@@ -159,11 +174,13 @@ const renderChart = async () => {
           食材価格表
         </h2>
         <div class="pb-6 text-sm text-gray-600">
-          この表のデータを使用して、食材の組み合わせが計算されます
+          この表のデータを使い、食材の組み合わせが計算されます
         </div>
         <!-- 表本体 -->
-        <PriceLatestTable :data="isEditMode ? editedTableData : originalTableData" :isEditMode="isEditMode">
+        <PriceLatestTable :data="isEditMode ? editedTableData : originalTableData" :isEditMode="isEditMode" @validation-change="canSave = $event" class="overflow-y-auto">
         </PriceLatestTable>
+        <!-- 注意書き-->
+        <p class=" text-xs text-gray-600 text-left p-4 ">このサービスは、政府統計総合窓口(e-Stat)のAPI機能を使用していますが、サービスの内容は国によって保証されたものではありません。</p>
         <!-- 更新ボタンと、手入力ボタン -->
         <div class="sticky bottom-20 px-4 pt-4 mt-8 -mx-4 bg-white shadow-[0_-0.125rem_0.25rem_-0_rgba(0,0,0,0.1)]">
           <!-- 編集モードではないとき -->
@@ -186,6 +203,7 @@ const renderChart = async () => {
               <p class="font-medium text-gray-600">キャンセル</p>
             </button>
             <button class="flex grow p-3 gap-2 justify-center bg-green-600 text-title-medium font-medium rounded-full"
+              :disabled="!canSave"
               @click="() => {
                 saveEdits();
                 nextTick(() => openModal('afterEdit'));
@@ -237,30 +255,23 @@ const renderChart = async () => {
       <!-- 推移グラフタブの中身 -->
       <div v-show="activeTab === 'tab2'">
         <!-- セレクトボックス -->
-        <div class="grid grid-cols-10 gap-4">
-          <div class="grid-item col-span-4">
+        <div class="grid grid-cols-5 gap-4">
+          <div class="grid-item col-span-3">
             <label for="ingredient" class="block text-left text-xs font-medium mb-1">表示する食材</label>
-            <select id="ingredient" v-model="ingredientName" class="block w-full text-sm rounded-md border-2 p-2
+            <select id="ingredient" v-model="ingredientName" class="block w-full text-sm rounded-md border-2 p-2 bg-white
                      focus:outline-none focus:border-green-500 focus:ring-2 focus:ring-green-500">
               <option v-for="(value, key) in nameAndIdMap" :key="value" :value="key">
                 {{ key }}
               </option>
             </select>
           </div>
-          <div class="grid-item col-span-3">
+          <div class="grid-item col-span-2">
             <label for="comparisionCity" class="block text-left text-xs font-medium mb-1">比較する都市</label>
-            <select id="comparisionCity" v-model="compCityName" class="block w-full text-sm rounded-md border-2 p-2
+            <select id="comparisionCity" v-model="compCityName" class="block w-full text-sm rounded-md border-2 p-2 bg-white
                      focus:outline-none focus:border-green-500 focus:ring-2 focus:ring-green-500">
               <option v-for="(value, key) in areaParamMap" :key="value" :value="key">
                 {{ key }}
               </option>
-            </select>
-          </div>
-          <div class="grid-item col-span-3">
-            <label class="block text-left text-xs font-medium mb-1">期間</label>
-            <select class="block w-full text-sm rounded-md border-2 p-2
-                     focus:outline-none focus:border-green-500 focus:ring-2 focus:ring-green-500">
-
             </select>
           </div>
         </div>
@@ -269,7 +280,7 @@ const renderChart = async () => {
           @click="renderChart">グラフを描画</button>
 
         <!-- ローディング風のアニメーション -->
-        <div v-if="loading" class="fixed inset-0 bg-green-600 bg-opacity-50 flex items-center justify-center z-50">
+        <div v-if="loading" class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
           <!-- Tailwindのスピナーアニメ -->
           <div class="flex space-x-2 items-center justify-center">
             <div class="w-4 h-4 bg-gray-50 rounded-full transform scale-75 animate-ping"></div>

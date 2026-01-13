@@ -21,7 +21,7 @@ public class EstatClientService {
     final String BASE_URL = "http://api.e-stat.go.jp/rest/3.0/app/json/getStatsData"; // 小売物価統計のurl
     final String statsDataId = "0003421913"; // 統計表ID
 
-    final String cdTimeFrom = "2024001212"; // 2024年12月からの
+    final String cdTimeFrom = "2023001212"; // 2023年12月からの
     //final String cdArea = "23100"; // 名古屋における
     
     final String cdCat02From = "01001"; // うるち米(コシヒカリ)から

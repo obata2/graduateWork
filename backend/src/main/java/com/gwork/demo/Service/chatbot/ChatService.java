@@ -9,7 +9,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.gwork.demo.Service.ilp.ILPService;
-import com.gwork.demo.Service.ilp.SortILPResult;
 import com.gwork.demo.dto.ILPResultDTO;
 
 @Service
@@ -28,9 +27,8 @@ public class ChatService {
   }
 
   // 送られてきたキーワードを使ってプロンプトを作り、geminiに質問する
-  public String chat(String keyWord, String userId){
-
-    //外部知識はここで用意する
+  public String chat(String userId, String keyWord){
+    //外部知識はここで用意する (コンテキストが膨らまないよう、必要なフィールドのみに絞り込む)
     List<ILPResultDTO> iLPResultList = iLPService.findAllByUserId(userId);
     List<ILPResultDTO> trimmedList = iLPResultList.stream()
     .map(m -> {
@@ -49,7 +47,6 @@ public class ChatService {
     }catch(Exception e) {
       
     }
-    
     String schema = difineSchema();
     String prompt = "下記の条件を満たし、かつ下記のキーワードにあてはまる食事の献立を、3種類生成してください。なお、調理手順は料理初心者でも分かりやすいよう詳細に記述してください。\nレスポンスの形式は下記のスキーマに従うこと。\n使用する食材の組み合わせは、コンテキスト内にあるingredientsの中から選び、**必ずその中のすべての食材を**使用するようにしてください。その分量も併せて記載されているので、それに注意すること。\nただし、キーワードで使用する食材を指定され、コンテキスト内にそれを満たす食材の組み合わせが存在しない場合は、mealsを空として設定を変更する旨のメッセージのみを返すようにしてください。\n\n"
                   + "条件:\n" + "調理にかかる手間が少ないこと、日本の家庭で一般的に食べられている一般的な料理であること、3種類の献立は和洋バランスよく生成すること。\n"
@@ -123,6 +120,7 @@ public class ChatService {
     return schema;
   }
 
+  // reultIdで紐づけて、参照したilpResultの情報を回答にマージする
   private JsonNode mergeResultByResultId (JsonNode rawResponse, List<ILPResultDTO> iLPResultList) {
     ObjectMapper mapper = new ObjectMapper();
     ArrayNode mealsArray = (ArrayNode) rawResponse.get("meals");

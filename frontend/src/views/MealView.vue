@@ -26,9 +26,7 @@ const messages = ref([]);
 // ILPで得た最適解をもっておく
 const iLPResultList = ref([])
 const loadInitial = async () => {
-  const res = await apiClient.post(`/ILP/findAll`, {
-    userId: userId
-  });
+  const res = await apiClient.get(`/ilp-results/${userId}`);
   iLPResultList.value = res.data;
 };
 loadInitial();
@@ -55,6 +53,7 @@ const loadFromSessionStorage = (key) => {
 }
 
 // 送信処理
+const isWaitingGenerate = ref(false)
 const sendMessage = async (keyWord) => {
   if (!keyWord.trim()) return;
   // ユーザーの発言追加
@@ -66,6 +65,7 @@ const sendMessage = async (keyWord) => {
   // 入力欄クリア
   inputText.value = "";
   // geminiに質問する
+  isWaitingGenerate.value = true;
   const reply = await geminiApi(keyWord)
   messages.value.push({
     role: "assistant",
@@ -75,6 +75,7 @@ const sendMessage = async (keyWord) => {
       : null
   });
   saveToSessionStorage("chat", JSON.stringify(messages.value));
+  isWaitingGenerate.value = false;
   /*
     // サンプルメッセージ版
     const reply = await sampleApi()
@@ -91,8 +92,8 @@ const sendMessage = async (keyWord) => {
 
 // geminiに質問するAPI
 const geminiApi = async (keyWord) => {
-  const res = await apiClient.post(`/chat/generateMeals`,
-    { text: keyWord, userId:userId },
+  const res = await apiClient.post(`/chat/generation/${userId}`,
+    { text: keyWord},
     { headers: { 'Content-Type': 'application/json' } });
   return res.data
 };
@@ -117,7 +118,7 @@ const closeModal = () => {
 };
 const activeModalTab = ref('specify');
 
-const loading = ref(false)
+const isWaitingILP = ref(false)
 // 食材指定・除外用の名前リスト
 const ingNameList = ref(null)
 const selectedIngredients = ref([]);
@@ -160,14 +161,13 @@ const isSelected = (item) => selectedIngredients.value.includes(item);
 const isExcluded = (item) => excludedIngredients.value.includes(item);
 // 指定・除外を反映させて、数理最適化を行い、さらにDBを更新する
 const replace = async () => {
-  loading.value = true;
-  await apiClient.post(`/ILP/replaceResults`, {
-    userId: userId,
+  isWaitingILP.value = true;
+  await apiClient.put(`/ilp-results/${userId}`, {
     selected: selectedIngredients.value,
     excluded: excludedIngredients.value
   });
   loadInitial();
-  loading.value = false;
+  isWaitingILP.value = false;
 }
 // 配列の各要素をつなげた文字列を作る
 const formatArray = (arr) => {
@@ -224,23 +224,29 @@ const loadFromLocalStorage = (key) => {
           </ul>
         </div>
       </div>
+      <!-- 生成待ちのアニメーションの吹き出し -->
+      <div v-if="isWaitingGenerate" class="flex justify-start items-center gap-2 px-3 py-2 rounded-lg text-sm bg-gray-100 w-fit">
+        <div class="animate-spin h-4 w-4 bg-gray-400 rounded"></div>
+        <p>生成中です...</p>
+      </div>
     </div>
 
     <!-- 設定ボタンとメッセージ入力欄 -->
     <div
       class="sticky flex bottom-20 left-0 right-0 py-4 gap-3 bg-gradient-to-t from-white via-white/100 to-transparent">
-      <button class="flex-col flex items-center justify-center rounded-full w-12 h-12 border shadow-md bg-white" @click="
+      <button class="flex flex-col  items-center justify-center rounded-full w-14 h-14 border shadow-md bg-white" @click="
         openModal('showCandidate')">
-        <span class="material-symbols-outlined  text-2xl text-gray-500">chat_info</span>
+        <span class="material-symbols-outlined text-2xl text-gray-500">grocery</span>
+        <p class="text-xs text-gray-500 -mt-1">食材</p>
       </button>
       <div class="relative flex-col grow">
         <input v-model="inputText" type="text" placeholder="キーワードを入力する"
-          class="w-full h-12 px-6 pr-12 border rounded-full font-medium shadow-md placeholder:text-gray-300 focus:outline-none"
+          class="w-full h-14 px-6 pr-12 border rounded-full font-medium shadow-md placeholder:text-gray-300 focus:outline-none"
           @keyup.enter="sendMessage(inputText)" />
         <button @click="sendMessage(inputText)"
-          class="absolute right-3 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center">
+          class="absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center">
           <span
-            class="material-symbols-outlined bg-clip-text bg-gradient-to-r from-green-400 to-blue-400 text-transparent text-2xl">send</span>
+            class="material-symbols-outlined bg-clip-text bg-gradient-to-r from-green-400 to-blue-400 text-transparent text-3xl">send</span>
         </button>
       </div>
     </div>
@@ -296,7 +302,7 @@ const loadFromLocalStorage = (key) => {
       </div>
       <!-- 「候補リスト」の中身 -->
       <div v-show="activeModalTab === 'solutionList'">
-        <p class="font-medium text-sm text-gray-600">AIが献立を生成する際には、下記のリストを参照しています</p>
+        <p class="font-medium text-sm text-gray-600">AIが献立を生成する際は、下記のリストを参照しています</p>
         <ILPSolutionCarousel :data="iLPResultList"></ILPSolutionCarousel>
         <div class="mt-4 text-sm text-gray-600">指定した食材：{{ loadFromLocalStorage('selected') }}</div>
         <div class="mt-4 text-sm text-gray-600">除外した食材：{{ loadFromLocalStorage('excluded') }}</div>
@@ -319,7 +325,7 @@ const loadFromLocalStorage = (key) => {
             openModal('showCandidate')">戻る</button>
           <button class="flex-1 p-2 bg-green-600 text-white rounded-full"
             @click="() => {
-              loading = true;
+              isWaitingILP = true;
               openModal('afterReplace');
               nextTick(() => replace())}">計算する</button>
         </div>
@@ -327,8 +333,8 @@ const loadFromLocalStorage = (key) => {
     </ModalSquare>
 
     <!-- 計算待ち・計算完了後のモーダル -->
-    <ModalSquare :show="activeModal === 'afterReplace'" width="90%" :closable="!loading" @close="openModal('showCandidate')">
-      <div v-if="loading">
+    <ModalSquare :show="activeModal === 'afterReplace'" width="90%" :closable="!isWaitingILP" @close="openModal('showCandidate')">
+      <div v-if="isWaitingILP">
         <div class="flex justify-center items-center gap-4 pb-4" aria-label="読み込み中">
           <div class="animate-spin h-6 w-6 border-4 border-green-500 rounded-full border-t-transparent"></div>
           <p class="text-lg font-semibold">計算中です...</p>

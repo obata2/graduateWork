@@ -87,8 +87,8 @@ onBeforeUnmount(() => {
 
 <template>
   <!-- ModalSquare にスロットで渡すコンテンツ -->
-   <div class="w-full" style="height: 500px;"> <!-- ←固定高さの親要素 -->
-    <h2 class="text-xl mb-2">pfc別のカロリーに対する、各食材の寄与率(%)</h2>
+   <div class="w-full" style="height: 450px;"> <!-- ←固定高さの親要素 -->
+    <p class="text-lg mb-2 font-medium">pfc別のカロリーに対する、各食材の寄与率(%)</p>
     <canvas ref="chartCanvas"></canvas>
   </div>
 </template>

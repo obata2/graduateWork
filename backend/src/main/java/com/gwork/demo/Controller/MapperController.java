@@ -16,7 +16,7 @@ public class MapperController {
     this.mIngredientsMapper = mIngredientsMapper;
   }
 
-  @GetMapping("/mIngredients")
+  @GetMapping("/m-Ingredients")
   public MIngredientsSummaryDTO getSummary () {
     return mIngredientsMapper.toSummary();
   }

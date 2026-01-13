@@ -1,5 +1,5 @@
 <script setup>
-import { defineProps, computed } from 'vue'
+import { defineProps, computed, watch } from 'vue'
 
 
 const props = defineProps({
@@ -15,10 +15,24 @@ const blinkBg = computed(() =>
   props.isEditMode ? "blink-bg" : ""
 )
 
-// 入力値が「1以上の整数値」であるかの判定
+// 入力値が「1以上の整数表現」であるかの判定
 const isInvalidPrice = (value) => {
-  return !Number.isInteger(value) || value < 1
+  const str = String(value);
+  return !/^[1-9]\d*$/.test(str);
 }
+
+// 不正な入力値が一か所でもある場合に、親コンポーネントでのDBへの保存リクエストをできなくさせる
+const hasInvalidPrice = computed(() => {
+  return props.data.some(row => isInvalidPrice(row.priceLatest))
+});
+const emit = defineEmits(['validation-change']);
+watch(
+  hasInvalidPrice,
+  (val) => {
+    emit('validation-change', !val); // true = 保存可能
+  },
+  { immediate: true }
+);
 
 // 編集前の価格情報を保持しておく
 const prevPriceMap = new Map()
@@ -37,7 +51,7 @@ const onPriceBlur = (row) => {
 </script>
 
 <template>
-  <div class="overflow-auto rounded-lg border-2">
+  <div class="rounded-lg border-2">
     <table class="w-full">
       <thead class="bg-gray-100 border-b-2">
         <tr>

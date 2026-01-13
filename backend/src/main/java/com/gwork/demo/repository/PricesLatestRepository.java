@@ -40,9 +40,12 @@ public interface PricesLatestRepository extends JpaRepository<PricesLatest, Pric
         )
         FROM PricesLatest pl
         JOIN pl.mIngredients mi
+        where pl.userId = :userId
         ORDER BY CAST(pl.ingredientId AS integer) ASC
       """)
-  List<PriceLatestRowDTO> findOrderRows();
+  List<PriceLatestRowDTO> findByUserIdOrderRows(
+    @Param("userId") String userId
+  );
 
   // 最新の統計情報に更新する
   @Modifying

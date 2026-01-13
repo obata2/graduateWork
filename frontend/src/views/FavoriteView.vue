@@ -2,12 +2,16 @@
 import { ref, onMounted, inject, nextTick } from 'vue';
 
 import ModalSquare from "C:\\Users\\81809\\Desktop\\demo\\frontend\\src\\components\\ModalSquare.vue";
-
 import { apiClient } from 'C:\\Users\\81809\\Desktop\\demo\\frontend\\src\\lib\\apiClient.js';
+
+// ユーザー情報の取得
+import { useUserStore } from 'C:\\Users\\81809\\Desktop\\demo\\frontend\\src\\stores\\users.js'
+const userStore = useUserStore();
+const userId = userStore.userId;
 
 const favoritesList = ref([]);
 const findAll = async () => {
-  const findRes = await apiClient.get('/psqlFavorites/findAll');
+  const findRes = await apiClient.get(`/favorites/${userId}`);
   favoritesList.value = findRes.data;
 }
 
@@ -22,12 +26,7 @@ const setToDelete = (favorite) => {
 
 // 削除処理
 const deleteById = async (userId, menuId) => {
-  await apiClient.delete('/psqlFavorites/deleteById', {
-    params: {
-      userId,
-      menuId
-    }
-  });
+  await apiClient.delete(`/favorites/${userId}/${menuId}`);
   await findAll();
 }
 
