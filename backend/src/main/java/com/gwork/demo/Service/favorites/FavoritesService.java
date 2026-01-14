@@ -10,6 +10,7 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.gwork.demo.dto.FavoritesExistenceResDTO;
 import com.gwork.demo.dto.FavoritesRequestDTO;
 import com.gwork.demo.model.Favorites;
 import com.gwork.demo.repository.FavoritesRepository;
@@ -33,19 +34,19 @@ public class FavoritesService {
     repository.save(entity);
   }
 
+  // 既存のレコードに対し、memoの内容のみ更新する
+  public void updateMemo (String userId, Integer menuId, String memo) {
+    if (!memo.equals(null)) {
+      repository.updateMemoByUserIdAndMenuId(userId, menuId, memo);
+    }
+  }
+
   // 同じuserIdで、同じハッシュ値になるようなレコードが存在するかを判定
-  public boolean existsByUserIdAndObjectHash(String userId, Favorites favorites) {
+  public FavoritesExistenceResDTO existsByUserIdAndObjectHash(String userId, Favorites favorites) {
     TreeMap<String, Object> sortedDishName = new TreeMap<>(favorites.getDishName());  // jsonb型ではmapの辞書順が統一されないので、ここでソートしておく
     String hash = generateHash(userId, sortedDishName);
-    boolean isExist = repository.existsByUserIdAndHash(userId, hash);
-    
-    if(isExist){
-      System.out.println(favorites.getMenuName() + "は存在します！");
-    }else{
-      System.out.println("hash : " + hash);
-      System.out.println(favorites.getMenuName() + "は存在しません");
-    }
-    return isExist;
+    FavoritesExistenceResDTO dto = repository.findByUserIdAndHash(userId, hash);
+    return dto;
   }
 
   // テーブルから全件取得

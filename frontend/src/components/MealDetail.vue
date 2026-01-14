@@ -21,13 +21,19 @@ onMounted(async () => {
   const res = await apiClient.post(`/favorites/${userId}/existence`,
     props.data
   );
-  isExist.value = res.data    // 存在する→true, 存在しない→false
+  isExist.value = res.data.isExist;
+  memoText.value = res.data.memo ?? "";
   // eslint-disable-next-line no-debugger
   debugger
 })
 
+const memoText = ref('');
+const mergeMemo = (data) => {
+  data.memo = memoText.value;
+}
+
 // --- モーダルの表示まわり ---
-const activeModal = ref(null); // 'sort' | 'filter' | 'options' | 'graph' | null      <ModalSquare :show="activeModal === '○○'"に引っかかることで任意のモーダルを呼び出す  
+const activeModal = ref(null); // 'afterSave' | 'graph' | 'memo' | null      <ModalSquare :show="activeModal === '○○'"に引っかかることで任意のモーダルを呼び出す  
 const openModal = (name) => {
   activeModal.value = name;
 };
@@ -48,11 +54,22 @@ function openGraph(nutrientsContriRate, pfcContriRate) {
   })
 }
 
-// --- SQLでfavoritesテーブルに保存するAPI ---
+// --- SQLでfavoritesテーブルに新規保存するAPI ---
 const save = async (data) => {
   console.log("お気に入り登録するよ");
   await apiClient.put(`/favorites/${userId}`, data);
   isExist.value = true
+}
+
+// --- memoの内容のみを更新するSQL ---
+const updateMemo = async (menuId) => {
+  await apiClient.patch(`/favorites/${userId}/${menuId}`, {
+    memo : memoText.value
+  },{
+    headers: { 
+      'Content-Type': 'application/json' 
+    } 
+  });
 }
 
 </script>
@@ -60,7 +77,7 @@ const save = async (data) => {
 <template>
   <div class="flex flex-col h-full">
     <!-- ヘッダー -->
-    <header class="sticky top-0 flex items-center px-4 h-20 bg-white border-b">
+    <header class="sticky top-0 flex gap-1 items-center px-4 h-20 bg-white border-b">
       <!-- 左：戻るボタン -->
       <button @click="closeFullScreen" class="flex items-center">
         <span class="material-symbols-outlined">arrow_back_ios</span>
@@ -149,18 +166,18 @@ const save = async (data) => {
       <div class="flex justify-center items-center h-full gap-3 px-4">
         <!-- お気に入り登録 -->
         <button v-if="!isExist"
-          class="flex flex-1 items-center justify-center gap-4 h-14 rounded-full bg-green-500 p-3 text-white font-medium"
+          class="flex flex-1 items-center justify-center gap-4 h-14 rounded-full bg-green-600 p-3 text-white font-medium"
           @click="() => {
             save(props.data)
-            nextTick(() => openModal('registered'))
+            nextTick(() => openModal('afterSave'))
           }">
-          <span class="material-symbols-outlined">favorite</span>
+          <span class="material-symbols-outlined">heart_plus</span>
           お気に入りに登録
         </button>
 
         <div v-else
-          class="flex flex-1 items-center justify-center gap-4 h-14 rounded-full bg-green-500 p-3 text-white font-medium">
-          <span class="material-symbols-outlined">favorite</span>
+          class="flex flex-1 items-center justify-center gap-4 h-14 rounded-full bg-green-600 p-3 text-white font-medium">
+          <span class="material-symbols-outlined">heart_check</span>
           登録済みです！
         </div>
 
@@ -168,13 +185,14 @@ const save = async (data) => {
         <button @click="() => {
           openModal('graph')
           nextTick(() => openGraph(props.data.nutrientsContriRate, props.data.pfcContriRate))
-        }" class="flex flex-col items-center justify-center w-14 h-14 rounded-full bg-green-500 text-white text-2xl">
+        }" class="flex flex-col items-center justify-center w-14 h-14 rounded-full bg-green-600 text-white text-2xl">
           <span class="material-symbols-outlined">bar_chart_4_bars</span>
           <p class="text-xs text-white-500">栄養</p>
         </button>
 
         <!-- メモ -->
-        <button class="flex flex-col items-center justify-center w-14 h-14 rounded-full bg-green-500 text-white text-2xl">
+        <button class="flex flex-col items-center justify-center w-14 h-14 rounded-full bg-green-600 text-white text-2xl"
+        @click="openModal('memo')">
           <span class="material-symbols-outlined mt-1">edit_note</span>
           <p class="text-xs text-white-500 -mt-1">メモ</p>
         </button>
@@ -183,7 +201,7 @@ const save = async (data) => {
 
     <!-- ↓モーダルウィンドウで表示するやつ -->
     <!-- お気に入り登録後のポップアップ -->
-    <ModalSquare :show="activeModal === 'registered'" width="90%" @close="closeModal">
+    <ModalSquare :show="activeModal === 'afterSave'" width="90%" @close="closeModal">
       <div class="flex flex-col items-center text-center gap-6">
         <span
           class="material-symbols-outlined flex items-center justify-center w-12 h-12 rounded-full text-4xl text-green-600 bg-green-100">check</span>
@@ -208,6 +226,36 @@ const save = async (data) => {
         <div v-show="graphTab === 'calories'">
           <PfcContriRateGraph :graphData="pfcContriGraphData" />
         </div>
+      </div>
+    </ModalSquare>
+    <!-- メモの入力欄 -->
+    <ModalSquare :show="activeModal === 'memo'" width="100%" height="40%" position="bottom" :animation=true
+      @close="closeModal">
+      <p class="text-sm font-medium">メモ(200文字まで)</p>
+      <textarea v-model="memoText" type="text" placeholder="メモを入力する" maxlength="200"
+          class="w-full h-3/5 mt-4 p-2 border rounded-lg font-medium text-sm resize-none overflow-y-auto placeholder:text-gray-600 focus:outline-none"
+           />
+      <p class="mb-2 text-xs text-gray-500 text-right">{{ memoText.length }}/200</p>
+      <button v-if="!isExist" class="w-full p-3 bg-green-600 text-white rounded-full"
+        @click="() => {
+          mergeMemo(props.data);
+          nextTick(() => save(props.data));
+          nextTick(() => openModal('afterSave'));
+        }">保存してお気に入りに登録</button>
+      <button v-else class="w-full p-3 bg-green-600 text-white rounded-full" 
+        @click="() => {
+          updateMemo(props.data.menuId);
+          nextTick(() => {mergeMemo(props.data);})
+          nextTick(() => {openModal('afterUpdateMemo')})
+        }">保存</button>
+    </ModalSquare>
+    <!-- メモのみ保存後のポップアップ -->
+    <ModalSquare :show="activeModal === 'afterUpdateMemo'" width="90%" @close="closeModal">
+      <div class="flex flex-col items-center text-center gap-6">
+        <span
+          class="material-symbols-outlined flex items-center justify-center w-12 h-12 rounded-full text-4xl text-green-600 bg-green-100">check</span>
+        <p class="text-lg font-bold">保存しました!</p>
+        <button class="w-full p-3 bg-green-600 text-white rounded-full" @click="closeModal">閉じる</button>
       </div>
     </ModalSquare>
   </div>

@@ -9,7 +9,7 @@ import lombok.Data;
 public class FavoritesRequestDTO {
   private String userId;
 
-  private String menuId;
+  private Integer menuId;
 	
   private Map<String, String> ingredients;
 

@@ -6,6 +6,7 @@ import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.gwork.demo.Service.favorites.FavoritesService;
+import com.gwork.demo.dto.FavoritesExistenceResDTO;
 import com.gwork.demo.dto.FavoritesRequestDTO;
 import com.gwork.demo.model.Favorites;
 
@@ -15,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 
@@ -30,9 +32,15 @@ public class FavoritesController {
     favoritesService.save(userId, favoritesRequestDTO);
   }
 
-  // すでにお気に入りに同じ献立が登録されているか確認する
+  // 既存のレコードに対し、memoの内容のみ更新する
+  @PatchMapping("/{userId}/{menuId}")
+  public void updateMemo(@PathVariable("userId") String userId, @PathVariable("menuId") Integer menuId, @RequestBody Map<String, String> body) {
+    favoritesService.updateMemo(userId, menuId, body.get("memo"));
+  }
+
+  // すでにお気に入りに同じ献立が登録されているか確認し、併せてmemoの内容も取り出す
   @PostMapping("/{userId}/existence")
-  public boolean exist(@PathVariable("userId") String userId, @RequestBody Favorites favorites) {
+  public FavoritesExistenceResDTO exist(@PathVariable("userId") String userId, @RequestBody Favorites favorites) {
     return favoritesService.existsByUserIdAndObjectHash(userId, favorites);
   }
 
