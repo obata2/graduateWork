@@ -225,9 +225,9 @@ const loadFromLocalStorage = (key) => {
         </div>
       </div>
       <!-- 生成待ちのアニメーションの吹き出し -->
-      <div v-if="isWaitingGenerate" class="flex justify-start items-center gap-2 px-3 py-2 rounded-lg text-sm bg-gray-100 w-fit">
-        <div class="animate-spin h-4 w-4 bg-gray-400 rounded"></div>
-        <p>生成中です...</p>
+      <div v-if="isWaitingGenerate" class="flex flex-col justify-start items-center gap-2 px-3 py-2 rounded-lg text-sm bg-gray-100 w-fit">
+        <p><span class="animate-spin h-4 w-4 mr-2 bg-gray-400 rounded"></span>生成中です...</p>
+        <p>しばらくお待ちください</p>
       </div>
     </div>
 

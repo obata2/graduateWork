@@ -48,4 +48,8 @@ public class ILPResults {
   @Column(name="pfc_contri_rate")
   @JdbcTypeCode(SqlTypes.JSON)
   private LinkedHashMap<String, double[]> pfcContriRate;
+
+  @Column(name="price_breakdown", columnDefinition = "JSON")
+  @JdbcTypeCode(SqlTypes.JSON)
+  private LinkedHashMap<String, Integer> priceBreakdown;
 }

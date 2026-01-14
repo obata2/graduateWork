@@ -17,6 +17,7 @@ public class ILPResultDTO {
   private double[] calculatedNutrients;
   private LinkedHashMap<String, double[]> nutrientsContriRate;
   private LinkedHashMap<String, double[]> pfcContriRate;
+  private LinkedHashMap<String, Integer> priceBreakdown;
   @JsonIgnore
   private int[] solutionVector;         // このDTOはフロントにも渡されるので、不要なsolutionVectorは隠して渡すようにする
 }

@@ -1,5 +1,6 @@
 package com.gwork.demo.dto;
 
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 import lombok.Data;
@@ -24,6 +25,8 @@ public class FavoritesRequestDTO {
   private Map<String, double[]> nutrientsContriRate;
   
   private Map<String, double[]> pfcContriRate;
+
+  private LinkedHashMap<String, Integer> priceBreakdown;
   
   private String menuName;
   

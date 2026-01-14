@@ -3,6 +3,7 @@ import { ref, inject, onMounted, nextTick } from 'vue'
 import ModalSquare from "C:\\Users\\81809\\Desktop\\demo\\frontend\\src\\components\\ModalSquare.vue";
 import NutrientsContriRateGraph from '../components/NutrientsContriRateGraph.vue';
 import PfcContriRateGraph from '../components/PfcContriRateGraph.vue';
+import PriceBreakdown from '../components/PriceBreakdown.vue';
 import { apiClient } from 'C:\\Users\\81809\\Desktop\\demo\\frontend\\src\\lib\\apiClient.js';
 
 // ユーザー情報の取得
@@ -33,7 +34,7 @@ const mergeMemo = (data) => {
 }
 
 // --- モーダルの表示まわり ---
-const activeModal = ref(null); // 'afterSave' | 'graph' | 'memo' | null      <ModalSquare :show="activeModal === '○○'"に引っかかることで任意のモーダルを呼び出す  
+const activeModal = ref(null); // 'afterSave' | 'contriGraph' | 'memo' | null      <ModalSquare :show="activeModal === '○○'"に引っかかることで任意のモーダルを呼び出す  
 const openModal = (name) => {
   activeModal.value = name;
 };
@@ -162,36 +163,45 @@ const updateMemo = async (menuId) => {
     </div>
 
     <!-- フッター -->
-    <footer class="sticky bottom-0 h-24 w-full gap-3 bg-white border-t">
-      <div class="flex justify-center items-center h-full gap-3 px-4">
+    <footer class="sticky bottom-0 h-24 w-full gap-1 bg-white border-t">
+      <div class="flex justify-center items-center h-full gap-2 px-4">
         <!-- お気に入り登録 -->
         <button v-if="!isExist"
-          class="flex flex-1 items-center justify-center gap-4 h-14 rounded-full bg-green-600 p-3 text-white font-medium"
+          class="flex flex-1 items-center justify-center gap-2 h-14 rounded-full bg-red-500 p-3 text-white font-medium"
           @click="() => {
             save(props.data)
             nextTick(() => openModal('afterSave'))
           }">
           <span class="material-symbols-outlined">heart_plus</span>
-          お気に入りに登録
+          お気に入り登録
         </button>
 
         <div v-else
-          class="flex flex-1 items-center justify-center gap-4 h-14 rounded-full bg-green-600 p-3 text-white font-medium">
+          class="flex flex-1 items-center justify-center gap-2 h-12 rounded-full bg-red-500 p-3 text-white font-medium">
           <span class="material-symbols-outlined">heart_check</span>
           登録済みです！
         </div>
 
+        <!-- 価格の内訳 -->
+        <button @click="() => {
+          openModal('priceBreakdown')
+          nextTick(() => openGraph(props.data.nutrientsContriRate, props.data.pfcContriRate))
+        }" class="flex flex-col items-center justify-center w-12 h-12 rounded-full bg-green-500 text-white text-2xl">
+          <span class="material-symbols-outlined">currency_yen</span>
+          <p class="text-xs text-white-500">内訳</p>
+        </button>
+
         <!-- 栄養グラフ -->
         <button @click="() => {
-          openModal('graph')
+          openModal('contriGraph')
           nextTick(() => openGraph(props.data.nutrientsContriRate, props.data.pfcContriRate))
-        }" class="flex flex-col items-center justify-center w-14 h-14 rounded-full bg-green-600 text-white text-2xl">
+        }" class="flex flex-col items-center justify-center w-12 h-12 rounded-full bg-green-500 text-white text-2xl">
           <span class="material-symbols-outlined">bar_chart_4_bars</span>
           <p class="text-xs text-white-500">栄養</p>
         </button>
 
         <!-- メモ -->
-        <button class="flex flex-col items-center justify-center w-14 h-14 rounded-full bg-green-600 text-white text-2xl"
+        <button class="flex flex-col items-center justify-center w-12 h-12 rounded-full bg-green-500 text-white text-2xl"
         @click="openModal('memo')">
           <span class="material-symbols-outlined mt-1">edit_note</span>
           <p class="text-xs text-white-500 -mt-1">メモ</p>
@@ -210,8 +220,12 @@ const updateMemo = async (menuId) => {
         <button class="w-full p-3 bg-green-600 text-white rounded-full" @click="closeModal">閉じる</button>
       </div>
     </ModalSquare>
+    <!-- 価格の内訳を表示 -->
+    <ModalSquare :show="activeModal === 'priceBreakdown'" width="90%" @close="closeModal">
+      <PriceBreakdown :ingredients="props.data.ingredients" :priceBreakdown="props.data.priceBreakdown"/>
+    </ModalSquare>
     <!-- 寄与率のグラフ描画 -->
-    <ModalSquare :show="activeModal === 'graph'" width="100%" height="70%" @close="closeModal">
+    <ModalSquare :show="activeModal === 'contriGraph'" width="100%" height="70%" @close="closeModal">
       <div class="relative">
         <!-- 付箋風タブ切り替え -->
         <div class="absolute -top-14 flex z-10">

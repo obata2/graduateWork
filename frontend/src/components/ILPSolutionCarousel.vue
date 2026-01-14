@@ -4,11 +4,14 @@ import { ref, defineProps, computed, nextTick } from 'vue'
 import ModalSquare from "C:\\Users\\81809\\Desktop\\demo\\frontend\\src\\components\\ModalSquare.vue";
 import NutrientsContriRateGraph from '../components/NutrientsContriRateGraph.vue';
 import PfcContriRateGraph from '../components/PfcContriRateGraph.vue';
+import PriceBreakdown from '../components/PriceBreakdown.vue';
 
 const props = defineProps({
   data: Object
 })
 
+const priceBreakdown = ref({});
+const ingredients =  ref({});
 const listSize = computed(() =>
   props.data.length
 )
@@ -76,18 +79,33 @@ function openGraph(nutrientsContriRate, pfcContriRate) {
           <!-- カードのフッター -->
           <div class="flex justify-between items-center">
             <span class="text-sm font-medium">{{ index + 1 }}/{{ listSize }}</span>
-            <button @click="() => {
-              openModal('graph');
-              nextTick(() => openGraph(solution.nutrientsContriRate, solution.pfcContriRate));
-            }">
-              <span class="material-symbols-outlined text-green-600 text-3xl">bar_chart_4_bars</span>
-            </button>
+            <div class="flex gap-4">
+              <button @click="() => {
+                priceBreakdown = solution.priceBreakdown;
+                ingredients = solution.ingredients;
+                openModal('priceBreakdown');
+              }">
+                <span class="material-symbols-outlined text-green-600 text-2xl">currency_yen</span>
+              </button>
+              <button @click="() => {
+                openModal('contriGraph');
+                nextTick(() => openGraph(solution.nutrientsContriRate, solution.pfcContriRate));
+              }">
+              <span class="material-symbols-outlined text-green-600 text-2xl">bar_chart_4_bars</span>
+              </button>
+            </div>
           </div>
         </div>
       </div>
     </div>
+
+    <!-- 価格の内訳を表示 -->
+    <ModalSquare :show="activeModal === 'priceBreakdown'" width="90%" @close="closeModal">
+      <PriceBreakdown :ingredients="ingredients" :priceBreakdown="priceBreakdown"/>
+    </ModalSquare>
+
     <!-- 寄与率のグラフ描画 -->
-    <ModalSquare :show="activeModal === 'graph'" width="100%" height="70%" @close="closeModal">
+    <ModalSquare :show="activeModal === 'contriGraph'" width="100%" height="70%" @close="closeModal">
       <div class="relative">
         <!-- 付箋風タブ切り替え -->
         <div class="absolute -top-14 flex z-10">

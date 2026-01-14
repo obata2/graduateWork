@@ -34,7 +34,7 @@ public class SolveILPService {
     this.dataAdjusterFactory = dataAdjusterFactory;
   }
   
-  // --- DLLのロード処理を行う ---
+  // DLLのロード処理を行う
   private void loadDLL() {
     if (!loaded) {
       System.out.println("(ロード完了)    パス一覧：" + System.getProperty("java.library.path"));
@@ -99,7 +99,7 @@ public class SolveILPService {
           result = calcKcal(stapleIndex, proteinIndex, result);    // ** totalKcal, pfcKcalをセット **
           result = calcNutrients(stapleIndex, proteinIndex, result);
           result = calcNutPfcContriRate(stapleIndex, proteinIndex, result);
-
+          calcPriceBreakDown(stapleIndex, proteinIndex, result);
           result.setResultId(resultId);
           resultId++;
 
@@ -115,7 +115,7 @@ public class SolveILPService {
 
   
 
-  // --- ILPで解く(totalPrice, solutionVectorをセット) ---
+  // ILPで解く(totalPrice, solutionVectorをセット)
   private ArrayList<ILPResultDTO> solveILP(ArrayList<ILPResultDTO> twoPatternsOfresult, FixValue fixValue, Set<String> selected, Set<String> excluded) {
     final double[] adjustedTargets = fixValue.getAdjustedTargets();
     final double fixedPrice = fixValue.getFixedPrice();
@@ -158,7 +158,7 @@ public class SolveILPService {
         }
         y[i] = solver.makeIntVar(0, 1, "y_" + i);
         z[i] = solver.makeIntVar(0, 1, "z_" + i);
-        // --- 非連続な変数にする ---
+        // 非連続な変数にする
         // 制約1: x[i] >= minVol * y[i]     (y[i]が1であるなら、x[i]は1食分の目安量の0.5倍より多い)
         MPConstraint c1 = solver.makeConstraint(0, Double.POSITIVE_INFINITY);
         c1.setCoefficient(x[i], 1);
@@ -167,7 +167,7 @@ public class SolveILPService {
         MPConstraint c2 = solver.makeConstraint(Double.NEGATIVE_INFINITY, 0);
         c2.setCoefficient(x[i], 1);
         c2.setCoefficient(y[i], - maxQty);
-        // --- x[i]とz[i]の連動 ---
+        // x[i]とz[i]の連動
         // 制約 A: x[i] - z[i] >= 0  (x >= z)
         MPConstraint cA = solver.makeConstraint(0.0, Double.POSITIVE_INFINITY);
         cA.setCoefficient(x[i], 1.0);
@@ -242,7 +242,7 @@ public class SolveILPService {
           solutionVector[i] = (int) Math.round(x[i].solutionValue());
           used[i] = solutionVector[i] > 0 ? true : false;
         }
-        result.setTotalPrice((int) (objective.value() + fixedPrice));    //totalPriceをセット
+        //result.setTotalPrice((int) (objective.value() + fixedPrice));    //totalPriceをセット
         //System.out.println("固定の価格：" + fixedPrice);
         result.setSolutionVector(solutionVector);   //solutionVectorをセット
         twoPatternsOfresult.add(result);
@@ -254,7 +254,7 @@ public class SolveILPService {
   }
 
 
-  // --- カロリーの実現値を算出する ---
+  // カロリーの実現値を算出する
   private ILPResultDTO calcKcal(int stapleIndex, int proteinIndex, ILPResultDTO result){
     final int[] solutionVector = result.getSolutionVector();
     int pCalColNum = (adjustedNutrientTable[0][0].length - 1) - 9;  //"タンパク質のエネルギー"の列番号
@@ -280,7 +280,7 @@ public class SolveILPService {
   }
 
 
-  // --- 栄養素の実現値を算出する ---
+  // 栄養素の実現値を算出する
   private ILPResultDTO calcNutrients(int stapleIndex, int proteinIndex, ILPResultDTO result){
     final int[] solutionVector = result.getSolutionVector();
     final int nutNum = nutrientsName.length;
@@ -303,14 +303,13 @@ public class SolveILPService {
   }
 
 
-  // --- 栄養素・pfcカロリーの寄与率を計算する ---
+  // 栄養素・pfcカロリーの寄与率を計算する
   private ILPResultDTO calcNutPfcContriRate(int stapleIndex, int proteinIndex, ILPResultDTO result){
     final int nutNum = nutrientsName.length;
     final double[] originalTargets = NutrientService.targets;;
     final int totalKcal = result.getTotalKcal();
     LinkedHashMap<String, double[]> nutrientsContriRate = new LinkedHashMap<>();
     LinkedHashMap<String, double[]> pfcContriRate = new LinkedHashMap<>();
-    
     //主食・肉類について
     nutrientsContriRate.put(ingName[0][stapleIndex], new double[nutNum]);          //栄養素の数だけの配列
     nutrientsContriRate.put(ingName[0][proteinIndex], new double[nutNum]);
@@ -326,7 +325,6 @@ public class SolveILPService {
       pfcContriRate.get(ingName[0][stapleIndex])[j] = (adjustedNutrientTable[0][stapleIndex][nutNum + j]) / totalKcal * 100;
       pfcContriRate.get(ingName[0][proteinIndex])[j] = (adjustedNutrientTable[0][proteinIndex][nutNum + j])  / totalKcal * 100;
     }
-
     final int[] solutionVector = result.getSolutionVector();
     //野菜類について
     for(int j=0; j<adjustedNutrientTable[1].length; j++){
@@ -351,7 +349,30 @@ public class SolveILPService {
   }
 
 
-  // --- solution を{材料名：グラム数}の辞書に変換 --- 
+  // 価格の内訳を計算する
+  private void calcPriceBreakDown (int stapleIndex, int proteinIndex, ILPResultDTO result) {
+    LinkedHashMap<String, Integer> priceBreakdown = new LinkedHashMap<>();
+    final int[] solutionVector = result.getSolutionVector();
+    int totalPrice = 0;
+    //主食・肉類の方
+    priceBreakdown.put(ingName[0][stapleIndex], (int) (adjustedPrices[0][stapleIndex]));
+    priceBreakdown.put(ingName[0][proteinIndex], (int) (adjustedPrices[0][proteinIndex]));
+    totalPrice += (int) (adjustedPrices[0][stapleIndex]);
+    totalPrice += (int) (adjustedPrices[0][proteinIndex]);
+    //野菜類の方
+    for (int i=0; i<solutionVector.length; i++) {
+      if (solutionVector[i] == 0) {
+        continue;
+      } else {
+        priceBreakdown.put(ingName[1][i], (int) (adjustedPrices[1][i] * solutionVector[i]));
+        totalPrice += (int) (adjustedPrices[1][i] * solutionVector[i]);
+      }
+    }
+    result.setTotalPrice(totalPrice);
+    result.setPriceBreakdown(priceBreakdown);
+  }
+
+  // solution を{材料名：グラム数}の辞書に変換 
   private ILPResultDTO formatIngredients(int stapleIndex, int proteinIndex, ILPResultDTO result){
     LinkedHashMap<String, String> ingredients = new LinkedHashMap<>();
     final int[] solutionVector = result.getSolutionVector();
@@ -367,7 +388,7 @@ public class SolveILPService {
   }
 
 
-  /* --- 計算結果をjsonファイルに書き込む ---
+  /* 計算結果をjsonファイルに書き込む
   public void saveResultToCache(ArrayList<ILPResultDTO> iLPResultList) {
     final String FILE_PATH = "C:\\Users\\81809\\Desktop\\demo\\frontend\\src\\assets\\cachedILPResult.json";
     ObjectMapper mapper = new ObjectMapper();

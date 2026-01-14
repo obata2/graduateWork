@@ -1,5 +1,6 @@
 package com.gwork.demo.model;
 
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 import org.hibernate.annotations.JdbcTypeCode;
@@ -53,6 +54,10 @@ public class Favorites {
     @Column(name="pfc_contri_rate", columnDefinition = "JSON")
     @JdbcTypeCode(SqlTypes.JSON)
     private Map<String, double[]> pfcContriRate;
+
+    @Column(name="price_breakdown", columnDefinition = "JSON")
+    @JdbcTypeCode(SqlTypes.JSON)
+    private LinkedHashMap<String, Integer> priceBreakdown;
 
     @Column(name="menu_name")
     private String menuName;
